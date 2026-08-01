@@ -17,11 +17,10 @@ the overlay on top of it.
   npx hyperframes render public --skill=general-video -o output.mp4 --fps 30
 
 LOGO
-Drop the Prospur artwork at public/brand/prospur-logo.png and re-run — it is
-picked up automatically. The supplied logo IS a wordmark, so no "Prospur"
-text is ever set beside it. Until the file exists, a vector reconstruction
-of the wordmark stands in — see brand_lockup(). Supply the light/knockout
-version: no invert filter is applied, so a dark-on-white file will not read.
+public/brand/prospur-logo.svg is the supplied artwork knocked out to white for
+these dark surfaces — regenerate it with assets/make-logo-variants.py. The
+wordmark IS the logo, so no "Prospur" text is ever set beside it, and no CSS
+filter is applied (filtering would destroy the green accent letter).
 
 LAYOUT (1080x1920 canvas — Instagram Reels / 9:16)
   y    0 - 1548  video block (two halves of 774, seam at y=774)
@@ -64,7 +63,8 @@ COMPLIANCE_LINES = [
 ]
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-LOGO = os.path.join(HERE, "public", "brand", "prospur-logo.png")
+# The real artwork, knocked out to white for these dark surfaces.
+LOGO = os.path.join(HERE, "public", "brand", "prospur-logo.svg")
 
 # Scene cuts detected in the source (ffmpeg scene score > 0.08)
 CUTS = [6.4333, 10.50, 15.6667, 20.4333]
@@ -136,35 +136,17 @@ def words(line, cls="hw"):
     return "".join(f'<span class="{cls}">{esc(w)}</span> ' for w in line.split())
 
 
-# Wordmark green — the gradient runs green into lime across the accent letter,
-# matching the supplied artwork rather than the reel's own --brand/--pop pair.
-MARK_G1, MARK_G2 = "#1E9E4A", "#8CC63F"
-
-
 def brand_lockup(size):
-    """The real artwork when it is present, otherwise a vector reconstruction
-    of it: PROSPUR knocked out to white with the second letter carrying the
-    green-to-lime gradient.
+    """The Prospur wordmark. No 'Prospur' text is set beside it — the artwork
+    is itself a wordmark, so typing the name again would double it up.
 
-    Set in Inter Bold, so the letterforms approximate the real wordmark rather
-    than reproduce it — this is a stand-in, not the asset. Drop the supplied
-    PNG at public/brand/prospur-logo.png and it takes over automatically.
-
-    Supply the light/knockout version: no invert filter is applied, because
-    inverting would flatten the green accent letter to white along with
-    everything else."""
+    No CSS filter is applied either: the file is already the light/knockout
+    variant. Filtering it would destroy the green accent letter (`brightness(0)
+    invert(1)` flattens it to white, plain `invert(1)` turns it magenta)."""
     if os.path.exists(LOGO):
-        return f'<img src="brand/prospur-logo.png" class="brand-img brand-img--{size}" alt="Prospur" />'
-    gid = f"pg-{size}"
-    return (
-        f'<svg class="wordmark wordmark--{size}" viewBox="0 0 668 150" role="img" '
-        f'aria-label="Prospur">'
-        f'<defs><linearGradient id="{gid}" x1="0" y1="0" x2="0.85" y2="1">'
-        f'<stop offset="0" stop-color="{MARK_G1}"/><stop offset="1" stop-color="{MARK_G2}"/>'
-        f'</linearGradient></defs>'
-        f'<text x="4" y="116" font-family="Inter, Helvetica Neue, Arial, sans-serif" '
-        f'font-weight="700" font-size="132" letter-spacing="-2" fill="#FFFFFF">'
-        f'P<tspan fill="url(#{gid})">R</tspan>OSPUR</text></svg>'
+        return f'<img src="brand/prospur-logo.svg" class="brand-img brand-img--{size}" alt="Prospur" />'
+    raise SystemExit(
+        "missing public/brand/prospur-logo.svg — run: python3 ../../assets/make-logo-variants.py"
     )
 
 
@@ -254,7 +236,7 @@ def build():
         peak_q, end_q = q(cut + 0.05), q(e)
         tl.append(
             f"tl.to('#flash-{i} .flash-inner', {{ opacity: 0, duration: {round(end_q - peak_q, 3)}, "
-            f"ease: 'power2.in' }}, {peak_q});"
+            f"ease: 'power2.in', overwrite: 'auto' }}, {peak_q});"
         )
         tl.append(f"tl.set('#flash-{i} .flash-inner', {{ opacity: 0, visibility: 'hidden' }}, {end_q});")
 
@@ -383,8 +365,8 @@ def build():
         f"scale: 1, duration: 0.4, ease: 'back.out(2.2)' }}, {q(CTA_START + 0.84)});"
     )
     # one slow breath on the chip so the last second is not a frozen frame
-    tl.append(f"tl.to('.cta-chip', {{ scale: 1.05, duration: 0.55, ease: 'sine.inOut' }}, {q(CTA_START + 1.36)});")
-    tl.append(f"tl.to('.cta-chip', {{ scale: 1.0, duration: 0.55, ease: 'sine.inOut' }}, {q(CTA_START + 1.91)});")
+    tl.append(f"tl.to('.cta-chip', {{ scale: 1.05, duration: 0.55, ease: 'sine.inOut', overwrite: 'auto' }}, {q(CTA_START + 1.36)});")
+    tl.append(f"tl.to('.cta-chip', {{ scale: 1.0, duration: 0.55, ease: 'sine.inOut', overwrite: 'auto' }}, {q(CTA_START + 1.91)});")
 
     # ------------------------------------------- compliance + brand plate ----
     compliance_html = (
@@ -563,9 +545,9 @@ CSS = f"""
   /* ---- brand mark (real artwork drops in at public/brand/prospur-logo.png) ----
      No invert filter: supply the light/knockout version. Inverting a
      dark-on-white logo would flatten the green accent letter to white too. */
-  .brand-img, .wordmark {{ display: block; height: auto; }}
-  .brand-img--band, .wordmark--band {{ width: 300px; }}
-  .brand-img--seam, .wordmark--seam {{ width: 168px; opacity: 0.97; }}
+  .brand-img {{ display: block; height: auto; }}
+  .brand-img--band {{ width: 310px; }}
+  .brand-img--seam {{ width: 196px; opacity: 0.97; }}
 """
 
 HTML = f"""<!DOCTYPE html>
@@ -601,7 +583,7 @@ def main():
     print(f"wrote {out}")
     print(f"  {q(DURATION)}s @ {FPS}fps · {CANVAS_W}x{CANVAS_H} (Instagram Reels 9:16)")
     print(f"  {len(CHIPS)} chip pairs · {len(CAPTIONS)} captions · {len(ANNOTATIONS)} rings · {len(CUTS)} cut flashes")
-    print(f"  logo: {'brand/prospur-logo.png' if os.path.exists(LOGO) else 'MISSING — using the vector wordmark reconstruction'}")
+    print("  logo: brand/prospur-logo.svg (supplied artwork, knocked out to white)")
 
 
 if __name__ == "__main__":

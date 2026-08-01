@@ -8,11 +8,10 @@ Renders to a single 1080x1920 PNG, not an MP4.
   npx hyperframes snapshot public --at 0
 
 LOGO
-Drop the Prospur artwork at public/img/prospur-logo.png and re-run — it is
-picked up automatically. The wordmark IS the logo, so no "Prospur" text is
-ever set beside it. Until the file exists, a vector reconstruction of the
-wordmark stands in — see brand_lockup(). Supply the light/knockout version:
-no invert filter is applied, so a dark-on-white file will not read.
+public/img/prospur-logo.svg is the supplied artwork knocked out to white for
+this dark cover — regenerate it with assets/make-logo-variants.py. The
+wordmark IS the logo, so no "Prospur" text is ever set beside it, and no CSS
+filter is applied (filtering would destroy the green accent letter).
 
 CROP SAFETY
 Instagram crops a cover three ways: the Reels player shows the full
@@ -44,36 +43,22 @@ PANEL_Y = 600
 LEFT_X, RIGHT_X = 74, 554
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-LOGO = os.path.join(HERE, "public", "img", "prospur-logo.png")
-
-
-# Wordmark green — the gradient runs green into lime across the accent letter,
-# matching the supplied artwork rather than the cover's own brand/pop pair.
-MARK_G1, MARK_G2 = "#1E9E4A", "#8CC63F"
+# The real artwork, knocked out to white for this dark cover. Regenerate with
+# assets/make-logo-variants.py if the master ever changes.
+LOGO = os.path.join(HERE, "public", "img", "prospur-logo.svg")
 
 
 def brand_lockup():
-    """The real artwork when it is present, otherwise a vector reconstruction
-    of it: PROSPUR knocked out to white with the second letter carrying the
-    green-to-lime gradient.
+    """The Prospur wordmark. No 'Prospur' text is set beside it — the artwork
+    is itself a wordmark, so typing the name again would double it up.
 
-    Set in Inter Bold, so the letterforms approximate the real wordmark rather
-    than reproduce it — this is a stand-in, not the asset. Drop the supplied
-    PNG at public/img/prospur-logo.png and it takes over automatically.
-
-    Supply the light/knockout version: no invert filter is applied, because
-    inverting would flatten the green accent letter to white along with
-    everything else."""
+    No CSS filter is applied either: the file is already the light/knockout
+    variant. Filtering it would destroy the green accent letter (`brightness(0)
+    invert(1)` flattens it to white, plain `invert(1)` turns it magenta)."""
     if os.path.exists(LOGO):
-        return '<img src="img/prospur-logo.png" class="brand-img" alt="Prospur" />'
-    return (
-        f'<svg class="wordmark" viewBox="0 0 668 150" role="img" aria-label="Prospur">'
-        f'<defs><linearGradient id="pg-cover" x1="0" y1="0" x2="0.85" y2="1">'
-        f'<stop offset="0" stop-color="{MARK_G1}"/><stop offset="1" stop-color="{MARK_G2}"/>'
-        f'</linearGradient></defs>'
-        f'<text x="4" y="116" font-family="Inter, Helvetica Neue, Arial, sans-serif" '
-        f'font-weight="700" font-size="132" letter-spacing="-2" fill="#FFFFFF">'
-        f'P<tspan fill="url(#pg-cover)">R</tspan>OSPUR</text></svg>'
+        return '<img src="img/prospur-logo.svg" class="brand-img" alt="Prospur" />'
+    raise SystemExit(
+        "missing public/img/prospur-logo.svg — run: python3 ../../assets/make-logo-variants.py"
     )
 
 
@@ -200,7 +185,7 @@ def main():
     with open(out, "w") as f:
         f.write(HTML)
     print(f"wrote {out}")
-    print(f"  logo: {'img/prospur-logo.png' if os.path.exists(LOGO) else 'MISSING — using the vector wordmark reconstruction'}")
+    print("  logo: img/prospur-logo.svg (supplied artwork, knocked out to white)")
 
 
 if __name__ == "__main__":

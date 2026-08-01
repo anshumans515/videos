@@ -146,9 +146,9 @@
   /* ---- brand mark (real artwork drops in at public/brand/prospur-logo.png) ----
      No invert filter: supply the light/knockout version. Inverting a
      dark-on-white logo would flatten the green accent letter to white too. */
-  .brand-img, .wordmark { display: block; height: auto; }
-  .brand-img--band, .wordmark--band { width: 300px; }
-  .brand-img--seam, .wordmark--seam { width: 168px; opacity: 0.97; }
+  .brand-img { display: block; height: auto; }
+  .brand-img--band { width: 310px; }
+  .brand-img--seam { width: 196px; opacity: 0.97; }
 </style>
 </head>
 <body>
@@ -246,10 +246,10 @@
     <div class="cta-inner"><div class="cta-line"><span class="kw">Which</span> <span class="kw">jar</span> <span class="kw">looks</span> </div><div class="cta-line"><span class="kw">like</span> <span class="kw">yours?</span> </div><div class="cta-sub">Want to understand where yours goes?</div><div class="cta-chip">DM us  ·  Start your SIP</div></div>
   </div>
   <div id="plate" class="clip " data-track-index="18" data-start="0.0" data-duration="25.267">
-    <div class="plate-inner"><div class="plate-rule"></div><div class="compliance"><div class="compliance-line">Prospur · AMFI-registered Mutual Fund Distributor · ARN-348873</div><div class="compliance-line">Mutual funds are subject to market risks. Read all scheme-related documents carefully.</div><div class="compliance-line">For information only, not investment advice.</div></div><div class="band"><div class="band-left"><svg class="wordmark wordmark--band" viewBox="0 0 668 150" role="img" aria-label="Prospur"><defs><linearGradient id="pg-band" x1="0" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#1E9E4A"/><stop offset="1" stop-color="#8CC63F"/></linearGradient></defs><text x="4" y="116" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-weight="700" font-size="132" letter-spacing="-2" fill="#FFFFFF">P<tspan fill="url(#pg-band)">R</tspan>OSPUR</text></svg></div><div class="band-right"><span class="band-dot"></span>prospur.in</div></div></div>
+    <div class="plate-inner"><div class="plate-rule"></div><div class="compliance"><div class="compliance-line">Prospur · AMFI-registered Mutual Fund Distributor · ARN-348873</div><div class="compliance-line">Mutual funds are subject to market risks. Read all scheme-related documents carefully.</div><div class="compliance-line">For information only, not investment advice.</div></div><div class="band"><div class="band-left"><img src="brand/prospur-logo.svg" class="brand-img brand-img--band" alt="Prospur" /></div><div class="band-right"><span class="band-dot"></span>prospur.in</div></div></div>
   </div>
   <div id="seam-mark" class="clip " data-track-index="19" data-start="2.933" data-duration="22.334">
-    <div class="seam-mark-inner"><svg class="wordmark wordmark--seam" viewBox="0 0 668 150" role="img" aria-label="Prospur"><defs><linearGradient id="pg-seam" x1="0" y1="0" x2="0.85" y2="1"><stop offset="0" stop-color="#1E9E4A"/><stop offset="1" stop-color="#8CC63F"/></linearGradient></defs><text x="4" y="116" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-weight="700" font-size="132" letter-spacing="-2" fill="#FFFFFF">P<tspan fill="url(#pg-seam)">R</tspan>OSPUR</text></svg></div>
+    <div class="seam-mark-inner"><img src="brand/prospur-logo.svg" class="brand-img brand-img--seam" alt="Prospur" /></div>
   </div>
   <div id="progress" class="clip " data-track-index="20" data-start="0.0" data-duration="25.267">
     <div class="progress-inner"><div class="progress-fill"></div></div>
@@ -261,19 +261,19 @@
   var tl = gsap.timeline({ paused: true });
   tl.set('#flash-0 .flash-inner', { opacity: 0 }, 6.4);
   tl.to('#flash-0 .flash-inner', { opacity: 0.22, duration: 0.05, ease: 'power2.out' }, 6.433);
-  tl.to('#flash-0 .flash-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 6.467);
+  tl.to('#flash-0 .flash-inner', { opacity: 0, duration: 0.233, ease: 'power2.in', overwrite: 'auto' }, 6.467);
   tl.set('#flash-0 .flash-inner', { opacity: 0, visibility: 'hidden' }, 6.7);
   tl.set('#flash-1 .flash-inner', { opacity: 0 }, 10.467);
   tl.to('#flash-1 .flash-inner', { opacity: 0.22, duration: 0.05, ease: 'power2.out' }, 10.5);
-  tl.to('#flash-1 .flash-inner', { opacity: 0, duration: 0.234, ease: 'power2.in' }, 10.533);
+  tl.to('#flash-1 .flash-inner', { opacity: 0, duration: 0.234, ease: 'power2.in', overwrite: 'auto' }, 10.533);
   tl.set('#flash-1 .flash-inner', { opacity: 0, visibility: 'hidden' }, 10.767);
   tl.set('#flash-2 .flash-inner', { opacity: 0 }, 15.633);
   tl.to('#flash-2 .flash-inner', { opacity: 0.22, duration: 0.05, ease: 'power2.out' }, 15.667);
-  tl.to('#flash-2 .flash-inner', { opacity: 0, duration: 0.2, ease: 'power2.in' }, 15.733);
+  tl.to('#flash-2 .flash-inner', { opacity: 0, duration: 0.2, ease: 'power2.in', overwrite: 'auto' }, 15.733);
   tl.set('#flash-2 .flash-inner', { opacity: 0, visibility: 'hidden' }, 15.933);
   tl.set('#flash-3 .flash-inner', { opacity: 0 }, 20.4);
   tl.to('#flash-3 .flash-inner', { opacity: 0.22, duration: 0.05, ease: 'power2.out' }, 20.433);
-  tl.to('#flash-3 .flash-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 20.467);
+  tl.to('#flash-3 .flash-inner', { opacity: 0, duration: 0.233, ease: 'power2.in', overwrite: 'auto' }, 20.467);
   tl.set('#flash-3 .flash-inner', { opacity: 0, visibility: 'hidden' }, 20.7);
   tl.fromTo('.divider-inner', { opacity: 0, scaleX: 0 }, { opacity: 1, scaleX: 1, duration: 0.5, ease: 'power3.out' }, 2.933);
   tl.to('.divider-inner', { scaleY: 2.8, duration: 0.09, ease: 'power2.out' }, 6.433);
@@ -366,8 +366,8 @@
   tl.fromTo('.cta-line .kw', { opacity: 0, y: 28, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.36, ease: 'back.out(1.9)', stagger: 0.055 }, 22.933);
   tl.fromTo('.cta-sub', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 23.433);
   tl.fromTo('.cta-chip', { opacity: 0, y: 18, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'back.out(2.2)' }, 23.633);
-  tl.to('.cta-chip', { scale: 1.05, duration: 0.55, ease: 'sine.inOut' }, 24.167);
-  tl.to('.cta-chip', { scale: 1.0, duration: 0.55, ease: 'sine.inOut' }, 24.7);
+  tl.to('.cta-chip', { scale: 1.05, duration: 0.55, ease: 'sine.inOut', overwrite: 'auto' }, 24.167);
+  tl.to('.cta-chip', { scale: 1.0, duration: 0.55, ease: 'sine.inOut', overwrite: 'auto' }, 24.7);
   tl.fromTo('.seam-mark-inner', { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power2.out' }, 3.167);
   tl.fromTo('.progress-fill', { scaleX: 0 }, { scaleX: 1, duration: 25.267, ease: 'none' }, 0);
   window.__timelines = window.__timelines || {};
