@@ -1,0 +1,24 @@
+<!--
+  Legibility scrim reference (PLAYBOOK.md §5).
+
+  This is a *reference snippet*, not a standalone composition — assemble.py
+  generates the actual scrim markup inline (function `scrim_html()`), tuned
+  per-clip from config.json's `head_position`. Copy this file's numbers when
+  you hand-tune a scrim for a specific source clip.
+
+  The `height:` value is how far down the gradient grades before going
+  fully transparent — set it to roughly where the subject's head starts,
+  so the darkest part of the gradient never crosses the face.
+
+    head_position: "standing"  -> head y ~ 470-700  -> scrim height ~ 760px
+    head_position: "seated"    -> head y ~ 900       -> scrim height ~ 1040px
+
+  Never extend the scrim (or any card) over the mouth or eyes.
+-->
+<div class="scrim-wrap clip" data-track-index="1" data-start="0" data-duration="__DURATION__">
+  <div class="scrim-inner" style="
+    position:absolute; top:0; left:0; width:1080px; height:760px;
+    background:linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.32) 45%, rgba(0,0,0,0) 100%);
+    pointer-events:none;
+  "></div>
+</div>

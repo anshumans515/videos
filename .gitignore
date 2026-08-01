@@ -1,0 +1,11 @@
+# Rendered output / editing intermediates (regenerate locally, don't commit)
+output.mp4
+cover.png
+*.wav
+saver.mp4
+saver_loop.mp4
+spender.mp4
+
+# OS / editor cruft
+.DS_Store
+node_modules/

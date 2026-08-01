@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>talking-head-recut</title>
+<link rel="stylesheet" href="../../../assets/fonts/fonts.css" />
+<style>
+  html, body { margin: 0; padding: 0; background: #000; }
+  #stage {
+    position: relative; width: 1080px; height: 1920px;
+    overflow: hidden; font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  }
+  video#input-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+  .scrim-inner {
+    position: absolute; top: 0; left: 0; width: 100%;
+    background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.32) 45%, rgba(0,0,0,0) 100%);
+  }
+
+  .kicker-inner { position: absolute; top: 120px; left: 64px; opacity: 0; }
+  .kicker-chip {
+    display: inline-block; padding: 10px 20px; border-radius: 999px;
+    background: #047857; color: #fff; font-weight: 700; font-size: 24px;
+    letter-spacing: 0.04em;
+  }
+
+  .kinetic-title-inner {
+    position: absolute; top: 190px; left: 64px; right: 64px; opacity: 0;
+  }
+  .title-line {
+    color: #fff; font-weight: 700; font-size: 76px; line-height: 1.06;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.45);
+  }
+
+  .lower-third-inner {
+    position: absolute; left: 64px; top: 500px; opacity: 0;
+  }
+  .lower-third-rule { width: 56px; height: 4px; background: #34D399; margin-bottom: 10px; }
+  .lower-third-name { color: #fff; font-weight: 700; font-size: 34px; }
+  .lower-third-role { color: rgba(255,255,255,0.78); font-weight: 400; font-size: 22px; }
+
+  .caption-inner {
+    position: absolute; left: 64px; right: 64px; top: 1380px;
+    font-weight: 700; font-size: 57px; line-height: 1.2; color: #fff;
+    text-shadow: 0 2px 14px rgba(0,0,0,0.55);
+  }
+  .caption-inner .w { margin: 0 0.19em; display: inline-block; }
+
+  .brand-mark-inner { position: absolute; top: 56px; right: 56px; width: 176px; opacity: 0; }
+  .brand-mark-img { width: 100%; height: auto; filter: brightness(0) invert(1); }
+
+  .compliance-inner {
+    position: absolute; left: 0; right: 0; bottom: 44px; opacity: 0;
+  }
+  .compliance-scrim {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 260px;
+    background: linear-gradient(0deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0) 100%);
+  }
+  .compliance-text {
+    position: relative; padding: 0 48px 28px; color: rgba(255,255,255,0.86);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+  }
+  .compliance-line { font-weight: 500; font-size: 20px; line-height: 1.4; }
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="talking-head-recut" data-start="0" data-duration="24"
+     data-fps="30" data-width="1080" data-height="1920">
+
+  <video id="input-video" class="clip" data-track-index="0" data-start="0" data-duration="24"
+         src="input-video.mp4" muted playsinline></video>
+
+  <div id="scrim" class="clip" data-track-index="1" data-start="0" data-duration="24">
+    <div class="scrim-inner" style="height:760px;"></div>
+  </div>
+
+  <div id="kicker" class="clip" data-track-index="2" data-start="0.3" data-duration="3.7">
+    <div class="kicker-inner"><span class="kicker-chip">MUTUAL FUNDS, EXPLAINED</span></div>
+  </div>
+  <div id="kinetic-title" class="clip" data-track-index="3" data-start="0.3" data-duration="3.7">
+    <div class="kinetic-title-inner"><div class="title-line">Why one fund</div><div class="title-line">isn't a plan</div></div>
+  </div>
+
+  <div id="lower-third" class="clip" data-track-index="4" data-start="1.0" data-duration="4.5">
+    <div class="lower-third-inner">
+      <div class="lower-third-rule"></div>
+      <div class="lower-third-name">Vedant</div>
+      <div class="lower-third-role">Prospur</div>
+    </div>
+  </div>
+
+  <div id="cap-0" class="clip" data-track-index="6" data-start="2.333" data-duration="1.667">
+    <div class="caption-inner"><span id="cap-0-w0" class="w">A</span> <span id="cap-0-w1" class="w">lot</span> <span id="cap-0-w2" class="w">of</span> <span id="cap-0-w3" class="w">people</span> <span id="cap-0-w4" class="w">think</span> </div>
+  </div>
+  <div id="cap-1" class="clip" data-track-index="6" data-start="4.033" data-duration="1.667">
+    <div class="caption-inner"><span id="cap-1-w0" class="w">one</span> <span id="cap-1-w1" class="w">good</span> <span id="cap-1-w2" class="w">fund</span> <span id="cap-1-w3" class="w">is</span> <span id="cap-1-w4" class="w">the</span> </div>
+  </div>
+  <div id="cap-2" class="clip" data-track-index="6" data-start="5.733" data-duration="1.667">
+    <div class="caption-inner"><span id="cap-2-w0" class="w">whole</span> <span id="cap-2-w1" class="w">plan</span> <span id="cap-2-w2" class="w">but</span> <span id="cap-2-w3" class="w">spreading</span> <span id="cap-2-w4" class="w">it</span> </div>
+  </div>
+  <div id="cap-3" class="clip" data-track-index="6" data-start="7.433" data-duration="1.333">
+    <div class="caption-inner"><span id="cap-3-w0" class="w">out</span> <span id="cap-3-w1" class="w">is</span> <span id="cap-3-w2" class="w">what</span> <span id="cap-3-w3" class="w">actually</span> </div>
+  </div>
+
+  <div id="brand-mark" class="clip" data-track-index="7" data-start="0" data-duration="24">
+    <div class="brand-mark-inner">
+      <img src="../../../assets/prospur-logo.png" alt="Prospur" class="brand-mark-img" />
+    </div>
+  </div>
+
+  <div id="compliance" class="clip" data-track-index="8" data-start="0" data-duration="24">
+    <div class="compliance-inner">
+      <div class="compliance-scrim"></div>
+      <div class="compliance-text"><div class="compliance-line compliance-line--0">Prospur · AMFI-registered Mutual Fund Distributor · ARN-348873</div><div class="compliance-line compliance-line--1">Mutual funds are subject to market risks. Read all scheme-related documents carefully.</div><div class="compliance-line compliance-line--2">For information only, not investment advice.</div></div>
+    </div>
+  </div>
+
+  <audio id="voice-track" class="clip" data-track-index="10" data-start="0" data-duration="24"
+         src="input-video.mp4"></audio>
+</div>
+<script>
+(function () {
+  var tl = gsap.timeline({ paused: true });
+  tl.fromTo('.kicker-inner', { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }, 0.3);
+  tl.fromTo('.kinetic-title-inner .title-line', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', stagger: 0.08 }, 0.367);
+  tl.to('.kicker-inner', { opacity: 0, duration: 0.2, ease: 'power2.in' }, 3.8);
+  tl.set('.kicker-inner', { opacity: 0 }, 4.0);
+  tl.to('.kinetic-title-inner', { opacity: 0, duration: 0.2, ease: 'power2.in' }, 3.8);
+  tl.set('.kinetic-title-inner', { opacity: 0 }, 4.0);
+  tl.fromTo('.lower-third-inner', { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.35, ease: 'power2.out' }, 1.0);
+  tl.to('.lower-third-inner', { opacity: 0, duration: 0.2, ease: 'power2.in' }, 5.3);
+  tl.set('.lower-third-inner', { opacity: 0 }, 5.5);
+  tl.fromTo('.brand-mark-inner', { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power2.out' }, 0.15);
+  tl.fromTo('.compliance-inner', { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power2.out' }, 0.15);
+  tl.fromTo('#cap-0 .caption-inner', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.12, ease: 'power2.out' }, 2.333);
+  tl.to('#cap-0-w0', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 2.367);
+  tl.to('#cap-0-w0', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 2.467);
+  tl.to('#cap-0-w1', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 2.7);
+  tl.to('#cap-0-w1', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 2.8);
+  tl.to('#cap-0-w2', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 3.033);
+  tl.to('#cap-0-w2', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 3.133);
+  tl.to('#cap-0-w3', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 3.367);
+  tl.to('#cap-0-w3', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 3.467);
+  tl.to('#cap-0-w4', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 3.7);
+  tl.to('#cap-0-w4', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 3.8);
+  tl.to('#cap-0 .caption-inner', { opacity: 0, duration: 0.12, ease: 'power2.in' }, 3.867);
+  tl.set('#cap-0 .caption-inner', { opacity: 0, visibility: 'hidden' }, 4.0);
+  tl.fromTo('#cap-1 .caption-inner', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.12, ease: 'power2.out' }, 4.033);
+  tl.to('#cap-1-w0', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 4.067);
+  tl.to('#cap-1-w0', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 4.167);
+  tl.to('#cap-1-w1', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 4.4);
+  tl.to('#cap-1-w1', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 4.5);
+  tl.to('#cap-1-w2', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 4.733);
+  tl.to('#cap-1-w2', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 4.833);
+  tl.to('#cap-1-w3', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 5.067);
+  tl.to('#cap-1-w3', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 5.167);
+  tl.to('#cap-1-w4', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 5.4);
+  tl.to('#cap-1-w4', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 5.5);
+  tl.to('#cap-1 .caption-inner', { opacity: 0, duration: 0.12, ease: 'power2.in' }, 5.567);
+  tl.set('#cap-1 .caption-inner', { opacity: 0, visibility: 'hidden' }, 5.7);
+  tl.fromTo('#cap-2 .caption-inner', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.12, ease: 'power2.out' }, 5.733);
+  tl.to('#cap-2-w0', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 5.767);
+  tl.to('#cap-2-w0', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 5.867);
+  tl.to('#cap-2-w1', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 6.1);
+  tl.to('#cap-2-w1', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 6.2);
+  tl.to('#cap-2-w2', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 6.433);
+  tl.to('#cap-2-w2', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 6.533);
+  tl.to('#cap-2-w3', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 6.767);
+  tl.to('#cap-2-w3', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 6.867);
+  tl.to('#cap-2-w4', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 7.1);
+  tl.to('#cap-2-w4', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 7.2);
+  tl.to('#cap-2 .caption-inner', { opacity: 0, duration: 0.12, ease: 'power2.in' }, 7.267);
+  tl.set('#cap-2 .caption-inner', { opacity: 0, visibility: 'hidden' }, 7.4);
+  tl.fromTo('#cap-3 .caption-inner', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.12, ease: 'power2.out' }, 7.433);
+  tl.to('#cap-3-w0', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 7.467);
+  tl.to('#cap-3-w0', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 7.567);
+  tl.to('#cap-3-w1', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 7.8);
+  tl.to('#cap-3-w1', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 7.9);
+  tl.to('#cap-3-w2', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 8.133);
+  tl.to('#cap-3-w2', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 8.233);
+  tl.to('#cap-3-w3', { color: '#34D399', scale: 1.12, duration: 0.10, ease: 'power2.out', overwrite: 'auto' }, 8.467);
+  tl.to('#cap-3-w3', { scale: 1.0, duration: 0.13, ease: 'power2.in', overwrite: 'auto' }, 8.567);
+  tl.to('#cap-3 .caption-inner', { opacity: 0, duration: 0.12, ease: 'power2.in' }, 8.633);
+  tl.set('#cap-3 .caption-inner', { opacity: 0, visibility: 'hidden' }, 8.767);
+  window.__timelines = window.__timelines || {};
+  window.__timelines["talking-head-recut"] = tl;
+})();
+</script>
+</body>
+</html>
