@@ -19,7 +19,9 @@ the overlay on top of it.
 LOGO
 Drop the Prospur artwork at public/brand/prospur-logo.png and re-run — it is
 picked up automatically. The supplied logo IS a wordmark, so no "Prospur"
-text is ever set beside it. Until the file exists a plain green mark stands in.
+text is ever set beside it. Until the file exists, a vector reconstruction
+of the wordmark stands in — see brand_lockup(). Supply the light/knockout
+version: no invert filter is applied, so a dark-on-white file will not read.
 
 LAYOUT (1080x1920 canvas — Instagram Reels / 9:16)
   y    0 - 1548  video block (two halves of 774, seam at y=774)
@@ -134,18 +136,35 @@ def words(line, cls="hw"):
     return "".join(f'<span class="{cls}">{esc(w)}</span> ' for w in line.split())
 
 
+# Wordmark green — the gradient runs green into lime across the accent letter,
+# matching the supplied artwork rather than the reel's own --brand/--pop pair.
+MARK_G1, MARK_G2 = "#1E9E4A", "#8CC63F"
+
+
 def brand_lockup(size):
-    """The real artwork when it is present. No 'Prospur' text is set next to
-    it — the supplied logo is itself a wordmark, so typing the name again
-    would double it up."""
+    """The real artwork when it is present, otherwise a vector reconstruction
+    of it: PROSPUR knocked out to white with the second letter carrying the
+    green-to-lime gradient.
+
+    Set in Inter Bold, so the letterforms approximate the real wordmark rather
+    than reproduce it — this is a stand-in, not the asset. Drop the supplied
+    PNG at public/brand/prospur-logo.png and it takes over automatically.
+
+    Supply the light/knockout version: no invert filter is applied, because
+    inverting would flatten the green accent letter to white along with
+    everything else."""
     if os.path.exists(LOGO):
         return f'<img src="brand/prospur-logo.png" class="brand-img brand-img--{size}" alt="Prospur" />'
+    gid = f"pg-{size}"
     return (
-        f'<svg class="brand-fallback brand-fallback--{size}" viewBox="0 0 40 40" aria-hidden="true">'
-        f'<rect x="1.5" y="1.5" width="37" height="37" rx="11" fill="{BRAND}"/>'
-        f'<path d="M11 26.5 L18 19 L23 24 L30.5 14.5" fill="none" stroke="#fff" '
-        f'stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>'
-        f'<circle cx="30.5" cy="14.5" r="2.9" fill="{POP}"/></svg>'
+        f'<svg class="wordmark wordmark--{size}" viewBox="0 0 668 150" role="img" '
+        f'aria-label="Prospur">'
+        f'<defs><linearGradient id="{gid}" x1="0" y1="0" x2="0.85" y2="1">'
+        f'<stop offset="0" stop-color="{MARK_G1}"/><stop offset="1" stop-color="{MARK_G2}"/>'
+        f'</linearGradient></defs>'
+        f'<text x="4" y="116" font-family="Inter, Helvetica Neue, Arial, sans-serif" '
+        f'font-weight="700" font-size="132" letter-spacing="-2" fill="#FFFFFF">'
+        f'P<tspan fill="url(#{gid})">R</tspan>OSPUR</text></svg>'
     )
 
 
@@ -229,7 +248,7 @@ def build():
         clip(f"flash-{i}", 5, s, e, "flash-inner", "")
         tl.append(f"tl.set('#flash-{i} .flash-inner', {{ opacity: 0 }}, {q(s)});")
         tl.append(
-            f"tl.to('#flash-{i} .flash-inner', {{ opacity: 0.30, duration: 0.05, "
+            f"tl.to('#flash-{i} .flash-inner', {{ opacity: 0.22, duration: 0.05, "
             f"ease: 'power2.out' }}, {q(cut)});"
         )
         peak_q, end_q = q(cut + 0.05), q(e)
@@ -535,15 +554,13 @@ CSS = f"""
   .progress-fill {{ width: 100%; height: 100%; background: {POP};
                     transform-origin: left center; box-shadow: 0 0 14px {POP}; }}
 
-  /* ---- brand mark (real artwork drops in at public/brand/prospur-logo.png) ---- */
-  .brand-img {{ display: block; height: auto; filter: brightness(0) invert(1); }}
-  .brand-img--band {{ width: 300px; }}
-  .brand-img--seam {{ width: 150px; opacity: 0.9;
-                      filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0,0,0,0.9)); }}
-  .brand-fallback {{ display: block; }}
-  .brand-fallback--band {{ width: 62px; height: 62px; }}
-  .brand-fallback--seam {{ width: 34px; height: 34px;
-                           filter: drop-shadow(0 2px 8px rgba(0,0,0,0.9)); }}
+  /* ---- brand mark (real artwork drops in at public/brand/prospur-logo.png) ----
+     No invert filter: supply the light/knockout version. Inverting a
+     dark-on-white logo would flatten the green accent letter to white too. */
+  .brand-img, .wordmark {{ display: block; height: auto; }}
+  .brand-img--band, .wordmark--band {{ width: 300px; }}
+  .brand-img--seam, .wordmark--seam {{ width: 178px; opacity: 0.94;
+                      filter: drop-shadow(0 2px 9px rgba(0,0,0,0.95)); }}
 """
 
 HTML = f"""<!DOCTYPE html>
@@ -579,7 +596,7 @@ def main():
     print(f"wrote {out}")
     print(f"  {q(DURATION)}s @ {FPS}fps · {CANVAS_W}x{CANVAS_H} (Instagram Reels 9:16)")
     print(f"  {len(CHIPS)} chip pairs · {len(CAPTIONS)} captions · {len(ANNOTATIONS)} rings · {len(CUTS)} cut flashes")
-    print(f"  logo: {'brand/prospur-logo.png' if os.path.exists(LOGO) else 'MISSING — using mark-only fallback'}")
+    print(f"  logo: {'brand/prospur-logo.png' if os.path.exists(LOGO) else 'MISSING — using the vector wordmark reconstruction'}")
 
 
 if __name__ == "__main__":

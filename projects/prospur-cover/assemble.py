@@ -10,7 +10,9 @@ Renders to a single 1080x1920 PNG, not an MP4.
 LOGO
 Drop the Prospur artwork at public/img/prospur-logo.png and re-run — it is
 picked up automatically. The wordmark IS the logo, so no "Prospur" text is
-ever set beside it. Until the file exists a plain green mark stands in.
+ever set beside it. Until the file exists, a vector reconstruction of the
+wordmark stands in — see brand_lockup(). Supply the light/knockout version:
+no invert filter is applied, so a dark-on-white file will not read.
 
 CROP SAFETY
 Instagram crops a cover three ways: the Reels player shows the full
@@ -45,18 +47,33 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 LOGO = os.path.join(HERE, "public", "img", "prospur-logo.png")
 
 
+# Wordmark green — the gradient runs green into lime across the accent letter,
+# matching the supplied artwork rather than the cover's own brand/pop pair.
+MARK_G1, MARK_G2 = "#1E9E4A", "#8CC63F"
+
+
 def brand_lockup():
-    """The real artwork when it is present. No 'Prospur' text is set next to
-    it — the supplied logo is itself a wordmark, so typing the name again
-    would double it up."""
+    """The real artwork when it is present, otherwise a vector reconstruction
+    of it: PROSPUR knocked out to white with the second letter carrying the
+    green-to-lime gradient.
+
+    Set in Inter Bold, so the letterforms approximate the real wordmark rather
+    than reproduce it — this is a stand-in, not the asset. Drop the supplied
+    PNG at public/img/prospur-logo.png and it takes over automatically.
+
+    Supply the light/knockout version: no invert filter is applied, because
+    inverting would flatten the green accent letter to white along with
+    everything else."""
     if os.path.exists(LOGO):
         return '<img src="img/prospur-logo.png" class="brand-img" alt="Prospur" />'
     return (
-        f'<svg class="brand-fallback" viewBox="0 0 40 40" aria-hidden="true">'
-        f'<rect x="1.5" y="1.5" width="37" height="37" rx="11" fill="{BRAND}"/>'
-        f'<path d="M11 26.5 L18 19 L23 24 L30.5 14.5" fill="none" stroke="#fff" '
-        f'stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>'
-        f'<circle cx="30.5" cy="14.5" r="2.9" fill="{POP}"/></svg>'
+        f'<svg class="wordmark" viewBox="0 0 668 150" role="img" aria-label="Prospur">'
+        f'<defs><linearGradient id="pg-cover" x1="0" y1="0" x2="0.85" y2="1">'
+        f'<stop offset="0" stop-color="{MARK_G1}"/><stop offset="1" stop-color="{MARK_G2}"/>'
+        f'</linearGradient></defs>'
+        f'<text x="4" y="116" font-family="Inter, Helvetica Neue, Arial, sans-serif" '
+        f'font-weight="700" font-size="132" letter-spacing="-2" fill="#FFFFFF">'
+        f'P<tspan fill="url(#pg-cover)">R</tspan>OSPUR</text></svg>'
     )
 
 
@@ -99,9 +116,10 @@ HTML = f"""<!DOCTYPE html>
   .ghost--2 {{ top: auto; bottom: -320px; left: -310px; right: auto; width: 780px; height: 780px;
                border: 64px solid {SPEND}; opacity: 0.06; }}
 
-  .top-mark {{ position: absolute; top: 78px; left: 74px; }}
-  .brand-img {{ display: block; width: 300px; height: auto; filter: brightness(0) invert(1); }}
-  .brand-fallback {{ display: block; width: 62px; height: 62px; }}
+  /* No invert filter: supply the light/knockout logo. Inverting a dark-on-white
+     one would flatten the green accent letter to white along with the rest. */
+  .top-mark {{ position: absolute; top: 74px; left: 74px; }}
+  .brand-img, .wordmark {{ display: block; width: 312px; height: auto; }}
 
   /* hook sits high so it clears the 4:5 feed crop (~y285) */
   .hook {{ position: absolute; top: 246px; left: 74px; width: 932px; }}
@@ -182,7 +200,7 @@ def main():
     with open(out, "w") as f:
         f.write(HTML)
     print(f"wrote {out}")
-    print(f"  logo: {'img/prospur-logo.png' if os.path.exists(LOGO) else 'MISSING — using mark-only fallback'}")
+    print(f"  logo: {'img/prospur-logo.png' if os.path.exists(LOGO) else 'MISSING — using the vector wordmark reconstruction'}")
 
 
 if __name__ == "__main__":
