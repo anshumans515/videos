@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 """
 Reels cover for the SAVER vs SPENDER reel — Archetype 4 (PLAYBOOK.md §4).
-Rendered as a single-frame PNG snapshot, not an MP4.
+Renders to a single 1080x1920 PNG, not an MP4.
 
   python3 assemble.py
   npx hyperframes lint public
   npx hyperframes snapshot public --at 0
 
-WHY TWO CIRCLES RATHER THAN A SPLIT-SCREEN STILL
+LOGO
+Drop the Prospur artwork at public/img/prospur-logo.png and re-run — it is
+picked up automatically. The wordmark IS the logo, so no "Prospur" text is
+ever set beside it. Until the file exists a plain green mark stands in.
+
+CROP SAFETY
 Instagram crops a cover three ways: the Reels player shows the full
 1080x1920, the feed takes a centred 4:5 slice (~y285-1635), and the profile
-grid takes a centred 1:1 slice (~y420-1500). A stacked split-screen still
-loses its whole top half to the grid crop and reads as one random frame.
-Two circular portraits sit inside the 1:1 band, so the comparison — the
-entire point of the reel — survives every crop.
+grid takes a centred 1:1 slice (~y420-1500). Both figures and both labels
+sit inside the 1:1 band, so the comparison survives every crop; the hook
+clears the 4:5 top edge.
 """
 import os
 
@@ -24,8 +28,6 @@ BRAND = "#047857"
 POP = "#34D399"
 SPEND = "#F59E0B"
 
-# Broken by hand rather than left to wrap: at 96px "Different month-end."
-# auto-wraps to "Different month-" / "end.", which reads as a typo at a glance.
 HOOK_LINES = [
     ("Same salary.", "hook-line--white"),
     ("Different", "hook-line--pop"),
@@ -34,38 +36,39 @@ HOOK_LINES = [
 ARN_LINE = "Prospur · AMFI-registered Mutual Fund Distributor · ARN-348873"
 CTA_CHIP = "DM us  ·  Start your SIP"
 
-# circle geometry — both inside the ~y420-1500 profile-grid band
-CIRCLE_D = 424
-CIRCLE_Y = 700
-LEFT_X, RIGHT_X = 74, 582
+# full-body panels, both inside the ~y420-1500 profile-grid band
+PANEL_W, PANEL_H = 452, 856
+PANEL_Y = 600
+LEFT_X, RIGHT_X = 74, 554
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+LOGO = os.path.join(HERE, "public", "img", "prospur-logo.png")
 
 
 def brand_lockup():
-    """Real wordmark when present, typographic lockup otherwise. Drop the asset
-    at public/img/prospur-logo.png and re-run to swap it in."""
-    if os.path.exists(os.path.join(HERE, "public", "img", "prospur-logo.png")):
+    """The real artwork when it is present. No 'Prospur' text is set next to
+    it — the supplied logo is itself a wordmark, so typing the name again
+    would double it up."""
+    if os.path.exists(LOGO):
         return '<img src="img/prospur-logo.png" class="brand-img" alt="Prospur" />'
     return (
-        f'<span class="wordmark">'
-        f'<svg class="wordmark-mark" viewBox="0 0 40 40" aria-hidden="true">'
+        f'<svg class="brand-fallback" viewBox="0 0 40 40" aria-hidden="true">'
         f'<rect x="1.5" y="1.5" width="37" height="37" rx="11" fill="{BRAND}"/>'
         f'<path d="M11 26.5 L18 19 L23 24 L30.5 14.5" fill="none" stroke="#fff" '
         f'stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>'
         f'<circle cx="30.5" cy="14.5" r="2.9" fill="{POP}"/></svg>'
-        f'<span class="wordmark-text">Prospur</span></span>'
     )
 
 
-def person(side, img, name, label, colour, x):
+def panel(side, img, name, label, colour, x):
     return f"""
-    <div class="person person--{side}" style="left:{x}px;">
-      <div class="ring" style="border-color:{colour};">
-        <img src="img/{img}" class="portrait" alt="{name}" />
+    <div class="panel panel--{side}" style="left:{x}px; border-color:{colour};">
+      <img src="img/{img}" class="panel-img" alt="{name}" />
+      <div class="panel-scrim"></div>
+      <div class="panel-caption">
+        <div class="panel-name">{name}</div>
+        <div class="panel-label" style="color:{colour};">{label}</div>
       </div>
-      <div class="person-name">{name}</div>
-      <div class="person-label" style="color:{colour};">{label}</div>
     </div>"""
 
 
@@ -86,56 +89,57 @@ HTML = f"""<!DOCTYPE html>
   #stage {{ position: relative; width: {CANVAS_W}px; height: {CANVAS_H}px; overflow: hidden;
             font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
             background:
-              radial-gradient(1100px 780px at 18% 6%, rgba(4,120,87,0.42) 0%, rgba(5,11,9,0) 62%),
-              radial-gradient(900px 700px at 92% 96%, rgba(245,158,11,0.20) 0%, rgba(5,11,9,0) 60%),
+              radial-gradient(1150px 800px at 16% 4%, rgba(4,120,87,0.46) 0%, rgba(5,11,9,0) 62%),
+              radial-gradient(950px 720px at 94% 92%, rgba(245,158,11,0.22) 0%, rgba(5,11,9,0) 60%),
               linear-gradient(168deg, #08150F 0%, #050B09 55%, #04100C 100%); }}
 
-  /* ghost background element — decorative texture only, never load-bearing */
-  .ghost {{ position: absolute; top: -230px; right: -280px; width: 900px; height: 900px;
-            border-radius: 50%; border: 74px solid {POP}; opacity: 0.075; }}
-  .ghost--2 {{ top: auto; bottom: -300px; left: -300px; right: auto; width: 760px; height: 760px;
-               border: 62px solid {SPEND}; opacity: 0.06; }}
+  /* decorative texture only, never load-bearing */
+  .ghost {{ position: absolute; top: -240px; right: -290px; width: 920px; height: 920px;
+            border-radius: 50%; border: 76px solid {POP}; opacity: 0.075; }}
+  .ghost--2 {{ top: auto; bottom: -320px; left: -310px; right: auto; width: 780px; height: 780px;
+               border: 64px solid {SPEND}; opacity: 0.06; }}
 
-  .top-mark {{ position: absolute; top: 84px; left: 74px; }}
+  .top-mark {{ position: absolute; top: 78px; left: 74px; }}
+  .brand-img {{ display: block; width: 300px; height: auto; filter: brightness(0) invert(1); }}
+  .brand-fallback {{ display: block; width: 62px; height: 62px; }}
 
-  /* hook lives in the upper band so it survives the 4:5 feed crop (~y285+) */
-  .hook {{ position: absolute; top: 296px; left: 74px; width: 932px; }}
-  .hook-line {{ font-weight: 700; font-size: 96px; line-height: 1.08; letter-spacing: -0.022em; }}
+  /* hook sits high so it clears the 4:5 feed crop (~y285) */
+  .hook {{ position: absolute; top: 246px; left: 74px; width: 932px; }}
+  .hook-line {{ font-weight: 700; font-size: 94px; line-height: 1.08; letter-spacing: -0.022em; }}
   .hook-line--white {{ color: #fff; }}
   .hook-line--pop {{ color: {POP}; }}
 
-  .person {{ position: absolute; top: {CIRCLE_Y}px; width: {CIRCLE_D}px; text-align: center; }}
-  .ring {{ width: {CIRCLE_D}px; height: {CIRCLE_D}px; border-radius: 50%; border: 9px solid;
-           overflow: hidden; box-shadow: 0 22px 60px rgba(0,0,0,0.55); }}
-  .portrait {{ width: 100%; height: 100%; object-fit: cover; display: block; }}
-  .person-name {{ margin-top: 26px; font-weight: 400; font-size: 25px; letter-spacing: 0.17em;
-                  color: rgba(255,255,255,0.62); }}
-  .person-label {{ margin-top: 8px; font-weight: 700; font-size: 42px; letter-spacing: 0.005em; }}
+  .panel {{ position: absolute; top: {PANEL_Y}px; width: {PANEL_W}px; height: {PANEL_H}px;
+            border-radius: 30px; border: 6px solid; overflow: hidden;
+            box-shadow: 0 26px 70px rgba(0,0,0,0.6); }}
+  .panel-img {{ width: 100%; height: 100%; object-fit: cover; display: block; }}
+  .panel-scrim {{ position: absolute; left: 0; right: 0; bottom: 0; height: 300px;
+                  background: linear-gradient(0deg, rgba(4,10,8,0.94) 0%, rgba(4,10,8,0.55) 46%,
+                                              rgba(4,10,8,0) 100%); }}
+  .panel-caption {{ position: absolute; left: 26px; right: 20px; bottom: 26px; }}
+  .panel-name {{ font-weight: 400; font-size: 23px; letter-spacing: 0.17em;
+                 color: rgba(255,255,255,0.66); }}
+  .panel-label {{ margin-top: 6px; font-weight: 700; font-size: 40px; line-height: 1.06;
+                  letter-spacing: 0.005em; }}
 
-  .vs {{ position: absolute; top: {CIRCLE_Y + CIRCLE_D // 2 - 46}px; left: {CANVAS_W // 2 - 46}px;
-         width: 92px; height: 92px; border-radius: 50%; background: #050B09;
-         border: 3px solid rgba(255,255,255,0.22); color: #fff; font-weight: 700; font-size: 33px;
-         display: flex; align-items: center; justify-content: center; letter-spacing: 0.04em; }}
+  .vs {{ position: absolute; top: {PANEL_Y + PANEL_H // 2 - 42}px; left: {CANVAS_W // 2 - 42}px;
+         width: 84px; height: 84px; border-radius: 50%; background: #050B09;
+         border: 3px solid rgba(255,255,255,0.24); color: #fff; font-weight: 700; font-size: 30px;
+         display: flex; align-items: center; justify-content: center; letter-spacing: 0.04em;
+         box-shadow: 0 8px 26px rgba(0,0,0,0.6); }}
 
-  .kicker {{ position: absolute; top: 1338px; left: 74px; width: 932px; font-weight: 700;
-             font-size: 54px; line-height: 1.18; color: #fff; }}
+  .kicker {{ position: absolute; top: 1512px; left: 74px; width: 932px; font-weight: 700;
+             font-size: 52px; line-height: 1.16; color: #fff; }}
   .kicker span {{ color: {POP}; }}
 
-  .cta-chip {{ position: absolute; top: 1482px; left: 74px; padding: 22px 40px; border-radius: 999px;
-               background: {BRAND}; color: #fff; font-weight: 700; font-size: 36px;
+  .cta-chip {{ position: absolute; top: 1626px; left: 74px; padding: 20px 38px; border-radius: 999px;
+               background: {BRAND}; color: #fff; font-weight: 700; font-size: 34px;
                letter-spacing: 0.02em; box-shadow: 0 14px 40px rgba(4,120,87,0.45); }}
 
-  .footer {{ position: absolute; left: 74px; bottom: 118px; width: 932px; display: flex;
-             align-items: center; justify-content: space-between; }}
-  .footer-site {{ font-weight: 400; font-size: 30px; color: rgba(255,255,255,0.6); }}
-  .arn {{ position: absolute; left: 74px; bottom: 64px; width: 932px; font-weight: 500;
-          font-size: 21px; color: rgba(255,255,255,0.5); }}
-
-  .wordmark {{ display: inline-flex; align-items: center; }}
-  .wordmark-mark {{ display: block; width: 58px; height: 58px; }}
-  .wordmark-text {{ font-weight: 700; font-size: 48px; color: #fff; letter-spacing: -0.02em;
-                    margin-left: 15px; }}
-  .brand-img {{ display: block; width: 252px; height: auto; filter: brightness(0) invert(1); }}
+  .footer-site {{ position: absolute; left: 74px; bottom: 108px; font-weight: 400; font-size: 28px;
+                  color: rgba(255,255,255,0.58); }}
+  .arn {{ position: absolute; left: 74px; bottom: 58px; width: 932px; font-weight: 500;
+          font-size: 20px; color: rgba(255,255,255,0.48); }}
 </style>
 </head>
 <body>
@@ -146,18 +150,15 @@ HTML = f"""<!DOCTYPE html>
   <div class="ghost ghost--2"></div>
 
   <div class="top-mark">{brand_lockup()}</div>
-
   <div class="hook">{hook_html}</div>
-{person("left", "anshuman.jpg", "ANSHUMAN", "PLANS FIRST", POP, LEFT_X)}
-{person("right", "vedant.jpg", "VEDANT", "SPENDS FIRST", SPEND, RIGHT_X)}
+{panel("left", "anshuman.jpg", "ANSHUMAN", "PLANS FIRST", POP, LEFT_X)}
+{panel("right", "vedant.jpg", "VEDANT", "SPENDS FIRST", SPEND, RIGHT_X)}
   <div class="vs">VS</div>
 
   <div class="kicker">Which jar looks <span>like yours?</span></div>
   <div class="cta-chip">{CTA_CHIP}</div>
 
-  <div class="footer">
-    <div class="footer-site">prospur.in</div>
-  </div>
+  <div class="footer-site">prospur.in</div>
   <div class="arn">{ARN_LINE}</div>
 </div>
 <script src="vendor/gsap.min.js"></script>
@@ -181,6 +182,7 @@ def main():
     with open(out, "w") as f:
         f.write(HTML)
     print(f"wrote {out}")
+    print(f"  logo: {'img/prospur-logo.png' if os.path.exists(LOGO) else 'MISSING — using mark-only fallback'}")
 
 
 if __name__ == "__main__":

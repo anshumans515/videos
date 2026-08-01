@@ -13,20 +13,31 @@ the overlay on top of it.
 
   python3 assemble.py
   npx hyperframes lint public
-  npx hyperframes snapshot public --at 1.5,5,8.5,13,18,23,24.8
+  npx hyperframes snapshot public --at 1.5,5,8.5,13,18,21.6,24.4
   npx hyperframes render public --skill=general-video -o output.mp4 --fps 30
 
-LAYOUT (1080x1920 canvas)
+LOGO
+Drop the Prospur artwork at public/brand/prospur-logo.png and re-run — it is
+picked up automatically. The supplied logo IS a wordmark, so no "Prospur"
+text is ever set beside it. Until the file exists a plain green mark stands in.
+
+LAYOUT (1080x1920 canvas — Instagram Reels / 9:16)
   y    0 - 1548  video block (two halves of 774, seam at y=774)
   y 1548 - 1658  compliance strip  <- above Instagram's ~250px bottom UI band,
                                       so it survives the in-feed crop (§2)
-  y 1658 - 1920  brand band (Prospur mark) — sits *under* the IG UI on purpose
+  y 1658 - 1920  brand band — sits *under* the IG UI on purpose
 
 All overlay chrome lives on the seam (the dead zone where two shots join) or
 below the video, so nothing covers a face or a story prop — the parcels sit
 bottom-left, the snacks along the desk, the SAVINGS jar bottom-right.
+
+TRACK / Z-ORDER (data-track-index doubles as z-order in HyperFrames)
+  0 video · 1-2 colour tints · 3 vignette · 4 grain · 5 cut flashes
+  6 divider · 7-8 chips · 9 captions · 11-12 ring annotations
+  13 hook scrim · 14 letterbox · 15 hook · 16 CTA scrim · 17 CTA
+  18 compliance plate · 19 seam mark · 20 progress bar
+Track 10 is left free — PLAYBOOK §9.6 reserves it for an audio element.
 """
-import json
 import os
 
 FPS = 30
@@ -51,9 +62,10 @@ COMPLIANCE_LINES = [
 ]
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+LOGO = os.path.join(HERE, "public", "brand", "prospur-logo.png")
 
 # Scene cuts detected in the source (ffmpeg scene score > 0.08)
-CUTS = [0.0, 6.4333, 10.5, 15.6667, 20.4333, DURATION]
+CUTS = [6.4333, 10.50, 15.6667, 20.4333]
 
 # ---- Copy ------------------------------------------------------------------
 # No rupee figures anywhere and no named schemes: the contrast is carried by
@@ -98,9 +110,15 @@ ANNOTATIONS = [
     (20.90, CTA_START, 890, 595, 178, 172, POP, "FILLING UP", 348),
     (21.25, CTA_START, 900, 1372, 178, 166, SPEND, "STILL EMPTY", 1124),
 ]
+
 CTA_LINES = ["Which jar looks", "like yours?"]
 CTA_SUB = "Want to understand where yours goes?"
 CTA_CHIP = "DM us  ·  Start your SIP"
+
+CINEMA = os.environ.get("CINEMA", "1") != "0"   # debug toggle for the base layers
+
+HOOK_END = 3.20
+DIVIDER_START = 2.95
 
 
 def q(t):
@@ -116,25 +134,22 @@ def words(line, cls="hw"):
     return "".join(f'<span class="{cls}">{esc(w)}</span> ' for w in line.split())
 
 
-# ---- markup ----------------------------------------------------------------
-
-def brand_lockup(size="band"):
-    """Prospur wordmark. Uses the real PNG when it is present, otherwise a
-    typographic lockup so the comp renders standalone. Drop the real asset at
-    public/brand/prospur-logo.png (880x168 with alpha) and re-run to swap."""
-    png = os.path.join(HERE, "public", "brand", "prospur-logo.png")
-    if os.path.exists(png):
+def brand_lockup(size):
+    """The real artwork when it is present. No 'Prospur' text is set next to
+    it — the supplied logo is itself a wordmark, so typing the name again
+    would double it up."""
+    if os.path.exists(LOGO):
         return f'<img src="brand/prospur-logo.png" class="brand-img brand-img--{size}" alt="Prospur" />'
     return (
-        f'<span class="wordmark wordmark--{size}">'
-        f'<svg class="wordmark-mark" viewBox="0 0 40 40" aria-hidden="true">'
+        f'<svg class="brand-fallback brand-fallback--{size}" viewBox="0 0 40 40" aria-hidden="true">'
         f'<rect x="1.5" y="1.5" width="37" height="37" rx="11" fill="{BRAND}"/>'
         f'<path d="M11 26.5 L18 19 L23 24 L30.5 14.5" fill="none" stroke="#fff" '
         f'stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>'
         f'<circle cx="30.5" cy="14.5" r="2.9" fill="{POP}"/></svg>'
-        f'<span class="wordmark-text">Prospur</span></span>'
     )
 
+
+# ---- build ------------------------------------------------------------------
 
 def build():
     html_parts, tl = [], []
@@ -153,102 +168,129 @@ def build():
         )
         return start, end
 
-    def fade(sel, start, end, fade_in=0.26, fade_out=0.22, y_from=14):
-        """Fade a wrapper in and out. The exit tween lands exactly on the
-        hard-kill .set() — landing after it trips gsap_exit_missing_hard_kill
-        and lets the element flash back on seek (§6, §9.7)."""
+    def hold(sel, at=0):
+        """Pin a wrapper visible. Only for elements that some OTHER tween
+        would otherwise leave mid-state — never for a static always-on
+        layer, because forcing opacity:1 overrides whatever alpha its CSS
+        intends (this is how the grain ended up painting at full strength
+        over the footage instead of at 0.055)."""
+        tl.append(f"tl.set('{sel}', {{ opacity: 1, y: 0 }}, {q(at)});")
+
+    def exit_on(sel, end, dur=0.22):
+        """Exit tween must land exactly on the hard-kill .set() — landing even a
+        few ms after it trips gsap_exit_missing_hard_kill and lets the element
+        flash back on seek (§6, §9.7).
+
+        Both endpoints are quantized and the duration derived from the
+        difference. Quantizing start and duration independently leaves them a
+        frame out of step at some boundaries, which is exactly the failure the
+        rule exists to catch."""
+        end_q = q(end)
+        start_q = q(end_q - dur)
         tl.append(
-            f"tl.fromTo('{sel}', {{ opacity: 0, y: {y_from} }}, "
-            f"{{ opacity: 1, y: 0, duration: {fade_in}, ease: 'power2.out' }}, {q(start)});"
+            f"tl.to('{sel}', {{ opacity: 0, duration: {round(end_q - start_q, 3)}, "
+            f"ease: 'power2.in' }}, {start_q});"
         )
-        out_at = q(end - fade_out)
-        tl.append(f"tl.to('{sel}', {{ opacity: 0, duration: {fade_out}, ease: 'power2.in' }}, {out_at});")
-        tl.append(f"tl.set('{sel}', {{ opacity: 0, visibility: 'hidden' }}, {q(end)});")
+        tl.append(f"tl.set('{sel}', {{ opacity: 0, visibility: 'hidden' }}, {end_q});")
 
     # ---------------------------------------------------------------- video --
     html_parts.append(
-        f'  <video id="input-video" class="clip" data-track-index="0" data-start="0" '
         # no `muted`: the repaired room tone is the reel's audio bed
+        f'  <video id="input-video" class="clip" data-track-index="0" data-start="0" '
         f'data-duration="{q(DURATION)}" data-has-audio="true" data-volume="1" '
         f'src="input-video.mp4" playsinline></video>'
     )
 
-    # ------------------------------------------------------- retention bar --
-    clip("progress", 1, 0, DURATION, "progress-inner", '<div class="progress-fill"></div>')
-    tl.append("tl.set('.progress-inner', { opacity: 1, y: 0 }, 0);")
-    tl.append(
-        f"tl.fromTo('.progress-fill', {{ scaleX: 0 }}, {{ scaleX: 1, duration: {q(DURATION)}, "
-        f"ease: 'none' }}, 0);"
-    )
+    # ------------------------------------------------- cinematic base layer --
+    # Per-half colour grade: the saver's half runs cool green, the spender's
+    # runs warm amber. Kept at soft-light and low alpha so skin still reads
+    # natural — it should feel like a grade, not a filter.
+    if CINEMA:
+        clip("tint-top", 1, 0, DURATION, "tint-inner tint-inner--top", "")
+        clip("tint-bot", 2, 0, DURATION, "tint-inner tint-inner--bot", "")
 
-    # ------------------------------------------------------------ the hook --
-    hook_end = 3.20
-    clip("hook-scrim", 2, 0, hook_end, "hook-scrim-inner", "")
-    tl.append("tl.set('.hook-scrim-inner', { opacity: 1, y: 0 }, 0);")
-    tl.append(f"tl.to('.hook-scrim-inner', {{ opacity: 0, duration: 0.32, ease: 'power2.in' }}, {q(hook_end - 0.32)});")
-    tl.append(f"tl.set('.hook-scrim-inner', {{ opacity: 0, visibility: 'hidden' }}, {q(hook_end)});")
+    if CINEMA:
+        clip("vignette", 3, 0, DURATION, "vignette-inner", "")
 
-    hook_html = "".join(
-        f'<div class="hook-line hook-line--{i}">{words(l)}</div>' for i, l in enumerate(HOOK_LINES)
-    )
-    clip("hook", 3, 0, hook_end, "hook-inner", hook_html)
-    tl.append("tl.set('.hook-inner', { opacity: 1, y: 0 }, 0);")
-    for i in range(len(HOOK_LINES)):
-        # First word is up by frame 3 — a quarter-second of empty scrim at the
-        # top of a Reel is a quarter-second of people scrolling past it.
-        at = q(0.10 + 0.62 * i)
+    # Film grain from a pre-baked 192x192 tile (brand/noise.png), repeated.
+    # Deterministic, and free to rasterize. An inline SVG feTurbulence gives a
+    # nicer grain but is catastrophically slow under software rasterization —
+    # it took the 25s render from ~7 minutes to over 40 with no end in sight,
+    # and starved the video layer badly enough that frames composited without
+    # it. Not worth it for a texture nobody consciously notices.
+    if CINEMA and os.path.exists(os.path.join(HERE, "public", "brand", "noise.png")):
+        clip("grain", 4, 0, DURATION, "grain-inner", "")
+    
+    # ------------------------------------------------------- cut flashes ----
+    # A short bloom on each scene cut, plus a pulse through the divider. Sells
+    # the cut as a deliberate edit rather than a jump in the source.
+    for i, cut in enumerate(CUTS):
+        s, e = cut - 0.02, cut + 0.26
+        clip(f"flash-{i}", 5, s, e, "flash-inner", "")
+        tl.append(f"tl.set('#flash-{i} .flash-inner', {{ opacity: 0 }}, {q(s)});")
         tl.append(
-            f"tl.fromTo('.hook-line--{i} .hw', {{ opacity: 0, y: 26, scale: 0.92 }}, "
-            f"{{ opacity: 1, y: 0, scale: 1, duration: 0.34, ease: 'back.out(1.7)', stagger: 0.07 }}, {at});"
+            f"tl.to('#flash-{i} .flash-inner', {{ opacity: 0.30, duration: 0.05, "
+            f"ease: 'power2.out' }}, {q(cut)});"
         )
-    tl.append(f"tl.to('.hook-inner', {{ opacity: 0, duration: 0.28, ease: 'power2.in' }}, {q(hook_end - 0.28)});")
-    tl.append(f"tl.set('.hook-inner', {{ opacity: 0, visibility: 'hidden' }}, {q(hook_end)});")
+        peak_q, end_q = q(cut + 0.05), q(e)
+        tl.append(
+            f"tl.to('#flash-{i} .flash-inner', {{ opacity: 0, duration: {round(end_q - peak_q, 3)}, "
+            f"ease: 'power2.in' }}, {peak_q});"
+        )
+        tl.append(f"tl.set('#flash-{i} .flash-inner', {{ opacity: 0, visibility: 'hidden' }}, {end_q});")
 
     # --------------------------------------------------------- seam divider --
-    divider_start = 2.95
-    clip("divider", 4, divider_start, DURATION, "divider-inner", "")
+    clip("divider", 6, DIVIDER_START, DURATION, "divider-inner", "")
     tl.append(
         f"tl.fromTo('.divider-inner', {{ opacity: 0, scaleX: 0 }}, {{ opacity: 1, scaleX: 1, "
-        f"duration: 0.5, ease: 'power3.out' }}, {q(divider_start)});"
+        f"duration: 0.5, ease: 'power3.out' }}, {q(DIVIDER_START)});"
     )
+    for cut in CUTS:
+        tl.append(f"tl.to('.divider-inner', {{ scaleY: 2.8, duration: 0.09, ease: 'power2.out' }}, {q(cut)});")
+        tl.append(f"tl.to('.divider-inner', {{ scaleY: 1, duration: 0.26, ease: 'power2.in' }}, {q(cut + 0.09)});")
 
     # --------------------------------------------------------- label chips ---
     for i, (s, e, top_label, bot_label) in enumerate(CHIPS):
         clip(
-            f"chip-t-{i}", 5, s, e, "chip-inner chip-inner--top",
+            f"chip-t-{i}", 7, s, e, "chip-inner chip-inner--top",
             f'<span class="chip-rule chip-rule--save"></span>'
             f'<span class="chip-body"><span class="chip-name">ANSHUMAN</span>'
             f'<span class="chip-label chip-label--save">{esc(top_label)}</span></span>',
         )
         clip(
-            f"chip-b-{i}", 6, s, e, "chip-inner chip-inner--bot",
+            f"chip-b-{i}", 8, s, e, "chip-inner chip-inner--bot",
             f'<span class="chip-rule chip-rule--spend"></span>'
             f'<span class="chip-body"><span class="chip-name">VEDANT</span>'
             f'<span class="chip-label chip-label--spend">{esc(bot_label)}</span></span>',
         )
-        fade(f"#chip-t-{i} .chip-inner", s, e, y_from=0)
-        fade(f"#chip-b-{i} .chip-inner", s, e, y_from=0)
-        tl.append(
-            f"tl.fromTo('#chip-t-{i} .chip-rule', {{ scaleY: 0 }}, {{ scaleY: 1, duration: 0.3, "
-            f"ease: 'power2.out' }}, {q(s + 0.08)});"
-        )
-        tl.append(
-            f"tl.fromTo('#chip-b-{i} .chip-rule', {{ scaleY: 0 }}, {{ scaleY: 1, duration: 0.3, "
-            f"ease: 'power2.out' }}, {q(s + 0.08)});"
-        )
+        for which in ("t", "b"):
+            sel = f"#chip-{which}-{i} .chip-inner"
+            tl.append(
+                f"tl.fromTo('{sel}', {{ opacity: 0, x: -46 }}, {{ opacity: 1, x: 0, "
+                f"duration: 0.42, ease: 'back.out(1.5)' }}, {q(s)});"
+            )
+            exit_on(sel, e)
+            tl.append(
+                f"tl.fromTo('#chip-{which}-{i} .chip-rule', {{ scaleY: 0 }}, {{ scaleY: 1, "
+                f"duration: 0.32, ease: 'back.out(2)' }}, {q(s + 0.10)});"
+            )
 
     # ------------------------------------------------------ scene captions ---
     for i, (s, e, l1, l2) in enumerate(CAPTIONS):
         clip(
-            f"cap-{i}", 7, s, e, "cap-inner",
+            f"cap-{i}", 9, s, e, "cap-inner",
             f'<div class="cap-line">{words(l1, "cw")}</div>'
             f'<div class="cap-line cap-line--2">{words(l2, "cw")}</div>',
         )
-        fade(f"#cap-{i} .cap-inner", s, e, y_from=10)
         tl.append(
-            f"tl.fromTo('#cap-{i} .cw', {{ opacity: 0, y: 14 }}, {{ opacity: 1, y: 0, "
-            f"duration: 0.26, ease: 'power2.out', stagger: 0.045 }}, {q(s + 0.06)});"
+            f"tl.fromTo('#cap-{i} .cap-inner', {{ opacity: 0, y: 12 }}, {{ opacity: 1, y: 0, "
+            f"duration: 0.26, ease: 'power2.out' }}, {q(s)});"
         )
+        tl.append(
+            f"tl.fromTo('#cap-{i} .cw', {{ opacity: 0, y: 18, scale: 0.94 }}, {{ opacity: 1, y: 0, "
+            f"scale: 1, duration: 0.3, ease: 'back.out(1.7)', stagger: 0.05 }}, {q(s + 0.06)});"
+        )
+        exit_on(f"#cap-{i} .cap-inner", e)
 
     # ---------------------------------------------------- scene-5 ring SVG ---
     for i, (s, e, cx, cy, rx, ry, colour, label, label_top) in enumerate(ANNOTATIONS):
@@ -260,16 +302,44 @@ def build():
             f'stroke-width="5" stroke-linecap="round" fill="none"/></svg>'
             f'<span class="ring-label" style="top:{label_top}px; color:{colour};">{esc(label)}</span>'
         )
-        clip(f"ring-{i}", 8 if i == 0 else 9, s, e, "ring-inner", svg)
+        clip(f"ring-{i}", 11 + i, s, e, "ring-inner", svg)
         tl.append(
-            f"tl.fromTo('#ring-{i} .ring-inner', {{ opacity: 0, scale: 1.22 }}, "
-            f"{{ opacity: 1, scale: 1, duration: 0.42, ease: 'back.out(1.5)' }}, {q(s)});"
+            f"tl.fromTo('#ring-{i} .ring-inner', {{ opacity: 0, scale: 1.24, rotation: -3 }}, "
+            f"{{ opacity: 1, scale: 1, rotation: 0, duration: 0.46, ease: 'back.out(1.6)' }}, {q(s)});"
         )
-        tl.append(f"tl.to('#ring-{i} .ring-inner', {{ opacity: 0, duration: 0.22, ease: 'power2.in' }}, {q(e - 0.22)});")
-        tl.append(f"tl.set('#ring-{i} .ring-inner', {{ opacity: 0, visibility: 'hidden' }}, {q(e)});")
+        exit_on(f"#ring-{i} .ring-inner", e)
+
+    # ------------------------------------------------------------ the hook --
+    clip("hook-scrim", 13, 0, HOOK_END, "hook-scrim-inner", "")
+    hold(".hook-scrim-inner")
+    exit_on(".hook-scrim-inner", HOOK_END, 0.32)
+
+    # cinematic letterbox that rides in with the hook and pulls away with it
+    clip("letterbox", 14, 0, HOOK_END, "lb-inner", '<div class="lb lb--t"></div><div class="lb lb--b"></div>')
+    tl.append("tl.set('.lb-inner', { opacity: 1, y: 0 }, 0);")
+    tl.append("tl.fromTo('.lb--t', { y: -128 }, { y: 0, duration: 0.5, ease: 'power3.out' }, 0);")
+    tl.append("tl.fromTo('.lb--b', { y: 128 }, { y: 0, duration: 0.5, ease: 'power3.out' }, 0);")
+    tl.append(f"tl.to('.lb--t', {{ y: -128, duration: 0.34, ease: 'power2.in' }}, {q(HOOK_END - 0.34)});")
+    tl.append(f"tl.to('.lb--b', {{ y: 128, duration: 0.34, ease: 'power2.in' }}, {q(HOOK_END - 0.34)});")
+    tl.append(f"tl.set('.lb-inner', {{ opacity: 0, visibility: 'hidden' }}, {q(HOOK_END)});")
+
+    hook_html = "".join(
+        f'<div class="hook-line hook-line--{i}">{words(l)}</div>' for i, l in enumerate(HOOK_LINES)
+    )
+    clip("hook", 15, 0, HOOK_END, "hook-inner", hook_html)
+    hold(".hook-inner")
+    for i in range(len(HOOK_LINES)):
+        # First word is up by frame 3 — a quarter-second of empty scrim at the
+        # top of a Reel is a quarter-second of people scrolling past it.
+        at = q(0.10 + 0.62 * i)
+        tl.append(
+            f"tl.fromTo('.hook-line--{i} .hw', {{ opacity: 0, y: 30, scale: 0.88 }}, "
+            f"{{ opacity: 1, y: 0, scale: 1, duration: 0.38, ease: 'back.out(2)', stagger: 0.065 }}, {at});"
+        )
+    exit_on(".hook-inner", HOOK_END, 0.28)
 
     # ------------------------------------------------------------- the CTA ---
-    clip("cta-scrim", 11, CTA_START, DURATION, "cta-scrim-inner", "")
+    clip("cta-scrim", 16, CTA_START, DURATION, "cta-scrim-inner", "")
     tl.append(
         f"tl.fromTo('.cta-scrim-inner', {{ opacity: 0 }}, {{ opacity: 1, duration: 0.34, "
         f"ease: 'power2.out' }}, {q(CTA_START)});"
@@ -279,20 +349,23 @@ def build():
         + f'<div class="cta-sub">{esc(CTA_SUB)}</div>'
         + f'<div class="cta-chip">{esc(CTA_CHIP)}</div>'
     )
-    clip("cta", 12, CTA_START, DURATION, "cta-inner", cta_html)
-    tl.append("tl.set('.cta-inner', { opacity: 1, y: 0 }, " + str(q(CTA_START)) + ");")
+    clip("cta", 17, CTA_START, DURATION, "cta-inner", cta_html)
+    hold(".cta-inner", CTA_START)
     tl.append(
-        f"tl.fromTo('.cta-line .kw', {{ opacity: 0, y: 24, scale: 0.94 }}, {{ opacity: 1, y: 0, "
-        f"scale: 1, duration: 0.32, ease: 'back.out(1.6)', stagger: 0.055 }}, {q(CTA_START + 0.12)});"
+        f"tl.fromTo('.cta-line .kw', {{ opacity: 0, y: 28, scale: 0.9 }}, {{ opacity: 1, y: 0, "
+        f"scale: 1, duration: 0.36, ease: 'back.out(1.9)', stagger: 0.055 }}, {q(CTA_START + 0.12)});"
     )
     tl.append(
         f"tl.fromTo('.cta-sub', {{ opacity: 0, y: 14 }}, {{ opacity: 1, y: 0, duration: 0.3, "
         f"ease: 'power2.out' }}, {q(CTA_START + 0.62)});"
     )
     tl.append(
-        f"tl.fromTo('.cta-chip', {{ opacity: 0, y: 16, scale: 0.94 }}, {{ opacity: 1, y: 0, "
-        f"scale: 1, duration: 0.36, ease: 'back.out(1.8)' }}, {q(CTA_START + 0.84)});"
+        f"tl.fromTo('.cta-chip', {{ opacity: 0, y: 18, scale: 0.9 }}, {{ opacity: 1, y: 0, "
+        f"scale: 1, duration: 0.4, ease: 'back.out(2.2)' }}, {q(CTA_START + 0.84)});"
     )
+    # one slow breath on the chip so the last second is not a frozen frame
+    tl.append(f"tl.to('.cta-chip', {{ scale: 1.05, duration: 0.55, ease: 'sine.inOut' }}, {q(CTA_START + 1.36)});")
+    tl.append(f"tl.to('.cta-chip', {{ scale: 1.0, duration: 0.55, ease: 'sine.inOut' }}, {q(CTA_START + 1.91)});")
 
     # ------------------------------------------- compliance + brand plate ----
     compliance_html = (
@@ -305,16 +378,22 @@ def build():
         + '<div class="band-right"><span class="band-dot"></span>prospur.in</div>'
         + "</div>"
     )
-    clip("plate", 13, 0, DURATION, "plate-inner", compliance_html)
-    tl.append("tl.set('.plate-inner', { opacity: 1, y: 0 }, 0);")
+    clip("plate", 18, 0, DURATION, "plate-inner", compliance_html)
 
     # ------------------------------------------------- seam brand watermark --
     # In-feed, Instagram's UI covers the brand band at the bottom, so a small
     # mark also rides the seam — the one strip of frame that is never a face.
-    clip("seam-mark", 14, divider_start, DURATION, "seam-mark-inner", brand_lockup("seam"))
+    clip("seam-mark", 19, DIVIDER_START, DURATION, "seam-mark-inner", brand_lockup("seam"))
     tl.append(
         f"tl.fromTo('.seam-mark-inner', {{ opacity: 0 }}, {{ opacity: 1, duration: 0.4, "
-        f"ease: 'power2.out' }}, {q(divider_start + 0.2)});"
+        f"ease: 'power2.out' }}, {q(DIVIDER_START + 0.2)});"
+    )
+
+    # ------------------------------------------------------- retention bar --
+    clip("progress", 20, 0, DURATION, "progress-inner", '<div class="progress-fill"></div>')
+    tl.append(
+        f"tl.fromTo('.progress-fill', {{ scaleX: 0 }}, {{ scaleX: 1, duration: {q(DURATION)}, "
+        f"ease: 'none' }}, 0);"
     )
 
     return "\n".join(html_parts), "\n  ".join(tl)
@@ -337,11 +416,29 @@ CSS = f"""
   video#input-video {{ position: absolute; top: 0; left: 0; width: {CANVAS_W}px;
                        height: {VIDEO_H}px; object-fit: cover; }}
 
-  /* ---- retention progress bar ---- */
-  .progress-inner {{ position: absolute; top: 0; left: 0; width: {CANVAS_W}px; height: 6px;
-                     background: rgba(255,255,255,0.16); }}
-  .progress-fill {{ width: 100%; height: 100%; background: {POP};
-                    transform-origin: left center; box-shadow: 0 0 14px {POP}; }}
+  /* ---- cinematic base layer ---- */
+  /* NO mix-blend-mode anywhere over the video. Chromium promotes <video> to
+     its own compositing layer, and a blended element above it composites
+     WITHOUT that layer in its backdrop — the whole video block renders as a
+     flat white plate. Cost us a render to find. Plain alpha only. */
+  .tint-inner {{ position: absolute; left: 0; width: {CANVAS_W}px; height: {SEAM_Y}px;
+                 pointer-events: none; }}
+  .tint-inner--top {{ top: 0;
+      background: linear-gradient(180deg, rgba(16,185,129,0.20) 0%, rgba(6,78,59,0.07) 100%); }}
+  .tint-inner--bot {{ top: {SEAM_Y}px;
+      background: linear-gradient(0deg, rgba(245,158,11,0.20) 0%, rgba(120,53,15,0.07) 100%); }}
+
+  .vignette-inner {{ position: absolute; top: 0; left: 0; width: {CANVAS_W}px; height: {VIDEO_H}px;
+      background: radial-gradient(ellipse 76% 56% at 50% 50%,
+                  rgba(0,0,0,0) 40%, rgba(0,0,0,0.20) 74%, rgba(0,0,0,0.52) 100%); }}
+
+  .grain-inner {{ position: absolute; top: 0; left: 0; width: {CANVAS_W}px; height: {VIDEO_H}px;
+                  opacity: 0.055; background-image: url('brand/noise.png');
+                  background-repeat: repeat; background-size: 192px 192px; }}
+
+  .flash-inner {{ position: absolute; top: 0; left: 0; width: {CANVAS_W}px; height: {VIDEO_H}px;
+                  background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%,
+                              rgba(214,255,238,0.9) 50%, rgba(255,255,255,0.96) 100%); }}
 
   /* ---- hook ---- */
   /* Light enough that the café still reads through — the first three seconds
@@ -351,6 +448,11 @@ CSS = f"""
   .hook-scrim-inner {{ position: absolute; top: 0; left: 0; width: {CANVAS_W}px; height: {VIDEO_H}px;
                        background: linear-gradient(180deg, rgba(4,10,8,0.78) 0%, rgba(4,10,8,0.52) 50%,
                                                    rgba(4,10,8,0.78) 100%); }}
+  .lb-inner {{ position: absolute; top: 0; left: 0; width: {CANVAS_W}px; height: {VIDEO_H}px; }}
+  .lb {{ position: absolute; left: 0; width: {CANVAS_W}px; height: 128px; background: #04100C; }}
+  .lb--t {{ top: 0; }}
+  .lb--b {{ bottom: 0; }}
+
   .hook-inner {{ position: absolute; top: 430px; left: 72px; width: 936px; text-align: left; }}
   .hook-line {{ font-weight: 700; font-size: 92px; line-height: 1.12; color: #fff; letter-spacing: -0.015em;
                 text-shadow: 0 3px 18px rgba(0,0,0,0.9), 0 0 46px rgba(0,0,0,0.7); }}
@@ -369,8 +471,8 @@ CSS = f"""
   .chip-inner--bot {{ top: {SEAM_Y + 14}px; }}
   .chip-rule {{ width: 7px; height: 60px; border-radius: 4px; flex: 0 0 auto; margin-left: 16px;
                 transform-origin: center center; }}
-  .chip-rule--save {{ background: {POP}; }}
-  .chip-rule--spend {{ background: {SPEND}; }}
+  .chip-rule--save {{ background: {POP}; box-shadow: 0 0 14px rgba(52,211,153,0.7); }}
+  .chip-rule--spend {{ background: {SPEND}; box-shadow: 0 0 14px rgba(245,158,11,0.7); }}
   .chip-body {{ display: flex; flex-direction: column; justify-content: center; }}
   .chip-name {{ font-weight: 400; font-size: 17px; letter-spacing: 0.16em;
                 color: rgba(255,255,255,0.62); margin-bottom: 3px; }}
@@ -409,7 +511,8 @@ CSS = f"""
               color: rgba(255,255,255,0.86); }}
   .cta-chip {{ display: inline-block; margin-top: 34px; padding: 20px 34px; border-radius: 999px;
                background: {BRAND}; color: #fff; font-weight: 700; font-size: 34px;
-               letter-spacing: 0.02em; box-shadow: 0 10px 34px rgba(4,120,87,0.45); }}
+               letter-spacing: 0.02em; box-shadow: 0 10px 34px rgba(4,120,87,0.55);
+               transform-origin: left center; }}
 
   /* ---- compliance + brand plate ---- */
   .plate-inner {{ position: absolute; top: {COMPLIANCE_TOP}px; left: 0; width: {CANVAS_W}px;
@@ -426,18 +529,21 @@ CSS = f"""
                  color: rgba(255,255,255,0.62); }}
   .band-dot {{ width: 12px; height: 12px; border-radius: 50%; background: {POP}; display: inline-block; }}
 
-  /* ---- wordmark (typographic fallback for assets/prospur-logo.png) ---- */
-  .wordmark {{ display: inline-flex; align-items: center; }}
-  .wordmark-mark {{ display: block; }}
-  .wordmark-text {{ font-weight: 700; color: #fff; letter-spacing: -0.02em; }}
-  .wordmark--band .wordmark-mark {{ width: 62px; height: 62px; }}
-  .wordmark--band .wordmark-text {{ font-size: 52px; margin-left: 16px; }}
-  .wordmark--seam .wordmark-mark {{ width: 30px; height: 30px; }}
-  .wordmark--seam .wordmark-text {{ font-size: 26px; margin-left: 9px;
-                                    text-shadow: 0 2px 10px rgba(0,0,0,0.9); }}
+  /* ---- retention progress bar ---- */
+  .progress-inner {{ position: absolute; top: 0; left: 0; width: {CANVAS_W}px; height: 6px;
+                     background: rgba(255,255,255,0.16); }}
+  .progress-fill {{ width: 100%; height: 100%; background: {POP};
+                    transform-origin: left center; box-shadow: 0 0 14px {POP}; }}
+
+  /* ---- brand mark (real artwork drops in at public/brand/prospur-logo.png) ---- */
   .brand-img {{ display: block; height: auto; filter: brightness(0) invert(1); }}
-  .brand-img--band {{ width: 268px; }}
-  .brand-img--seam {{ width: 132px; opacity: 0.86; }}
+  .brand-img--band {{ width: 300px; }}
+  .brand-img--seam {{ width: 150px; opacity: 0.9;
+                      filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0,0,0,0.9)); }}
+  .brand-fallback {{ display: block; }}
+  .brand-fallback--band {{ width: 62px; height: 62px; }}
+  .brand-fallback--seam {{ width: 34px; height: 34px;
+                           filter: drop-shadow(0 2px 8px rgba(0,0,0,0.9)); }}
 """
 
 HTML = f"""<!DOCTYPE html>
@@ -471,8 +577,9 @@ def main():
     with open(out, "w") as f:
         f.write(HTML)
     print(f"wrote {out}")
-    print(f"  duration {q(DURATION)}s @ {FPS}fps · {CANVAS_W}x{CANVAS_H}")
-    print(f"  {len(CHIPS)} chip pairs · {len(CAPTIONS)} captions · {len(ANNOTATIONS)} ring annotations")
+    print(f"  {q(DURATION)}s @ {FPS}fps · {CANVAS_W}x{CANVAS_H} (Instagram Reels 9:16)")
+    print(f"  {len(CHIPS)} chip pairs · {len(CAPTIONS)} captions · {len(ANNOTATIONS)} rings · {len(CUTS)} cut flashes")
+    print(f"  logo: {'brand/prospur-logo.png' if os.path.exists(LOGO) else 'MISSING — using mark-only fallback'}")
 
 
 if __name__ == "__main__":

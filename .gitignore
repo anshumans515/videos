@@ -14,6 +14,9 @@ spender.mp4
 templates/**/output.mp4
 templates/**/cover.png
 
+# HyperFrames per-render scratch dirs
+**/work-*/
+
 # Node
 package-lock.json
 

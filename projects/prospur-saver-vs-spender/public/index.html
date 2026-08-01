@@ -18,11 +18,29 @@
   video#input-video { position: absolute; top: 0; left: 0; width: 1080px;
                        height: 1548px; object-fit: cover; }
 
-  /* ---- retention progress bar ---- */
-  .progress-inner { position: absolute; top: 0; left: 0; width: 1080px; height: 6px;
-                     background: rgba(255,255,255,0.16); }
-  .progress-fill { width: 100%; height: 100%; background: #34D399;
-                    transform-origin: left center; box-shadow: 0 0 14px #34D399; }
+  /* ---- cinematic base layer ---- */
+  /* NO mix-blend-mode anywhere over the video. Chromium promotes <video> to
+     its own compositing layer, and a blended element above it composites
+     WITHOUT that layer in its backdrop — the whole video block renders as a
+     flat white plate. Cost us a render to find. Plain alpha only. */
+  .tint-inner { position: absolute; left: 0; width: 1080px; height: 774px;
+                 pointer-events: none; }
+  .tint-inner--top { top: 0;
+      background: linear-gradient(180deg, rgba(16,185,129,0.20) 0%, rgba(6,78,59,0.07) 100%); }
+  .tint-inner--bot { top: 774px;
+      background: linear-gradient(0deg, rgba(245,158,11,0.20) 0%, rgba(120,53,15,0.07) 100%); }
+
+  .vignette-inner { position: absolute; top: 0; left: 0; width: 1080px; height: 1548px;
+      background: radial-gradient(ellipse 76% 56% at 50% 50%,
+                  rgba(0,0,0,0) 40%, rgba(0,0,0,0.20) 74%, rgba(0,0,0,0.52) 100%); }
+
+  .grain-inner { position: absolute; top: 0; left: 0; width: 1080px; height: 1548px;
+                  opacity: 0.055; background-image: url('brand/noise.png');
+                  background-repeat: repeat; background-size: 192px 192px; }
+
+  .flash-inner { position: absolute; top: 0; left: 0; width: 1080px; height: 1548px;
+                  background: linear-gradient(180deg, rgba(255,255,255,0.96) 0%,
+                              rgba(214,255,238,0.9) 50%, rgba(255,255,255,0.96) 100%); }
 
   /* ---- hook ---- */
   /* Light enough that the café still reads through — the first three seconds
@@ -32,6 +50,11 @@
   .hook-scrim-inner { position: absolute; top: 0; left: 0; width: 1080px; height: 1548px;
                        background: linear-gradient(180deg, rgba(4,10,8,0.78) 0%, rgba(4,10,8,0.52) 50%,
                                                    rgba(4,10,8,0.78) 100%); }
+  .lb-inner { position: absolute; top: 0; left: 0; width: 1080px; height: 1548px; }
+  .lb { position: absolute; left: 0; width: 1080px; height: 128px; background: #04100C; }
+  .lb--t { top: 0; }
+  .lb--b { bottom: 0; }
+
   .hook-inner { position: absolute; top: 430px; left: 72px; width: 936px; text-align: left; }
   .hook-line { font-weight: 700; font-size: 92px; line-height: 1.12; color: #fff; letter-spacing: -0.015em;
                 text-shadow: 0 3px 18px rgba(0,0,0,0.9), 0 0 46px rgba(0,0,0,0.7); }
@@ -50,8 +73,8 @@
   .chip-inner--bot { top: 788px; }
   .chip-rule { width: 7px; height: 60px; border-radius: 4px; flex: 0 0 auto; margin-left: 16px;
                 transform-origin: center center; }
-  .chip-rule--save { background: #34D399; }
-  .chip-rule--spend { background: #F59E0B; }
+  .chip-rule--save { background: #34D399; box-shadow: 0 0 14px rgba(52,211,153,0.7); }
+  .chip-rule--spend { background: #F59E0B; box-shadow: 0 0 14px rgba(245,158,11,0.7); }
   .chip-body { display: flex; flex-direction: column; justify-content: center; }
   .chip-name { font-weight: 400; font-size: 17px; letter-spacing: 0.16em;
                 color: rgba(255,255,255,0.62); margin-bottom: 3px; }
@@ -90,7 +113,8 @@
               color: rgba(255,255,255,0.86); }
   .cta-chip { display: inline-block; margin-top: 34px; padding: 20px 34px; border-radius: 999px;
                background: #047857; color: #fff; font-weight: 700; font-size: 34px;
-               letter-spacing: 0.02em; box-shadow: 0 10px 34px rgba(4,120,87,0.45); }
+               letter-spacing: 0.02em; box-shadow: 0 10px 34px rgba(4,120,87,0.55);
+               transform-origin: left center; }
 
   /* ---- compliance + brand plate ---- */
   .plate-inner { position: absolute; top: 1548px; left: 0; width: 1080px;
@@ -107,182 +131,242 @@
                  color: rgba(255,255,255,0.62); }
   .band-dot { width: 12px; height: 12px; border-radius: 50%; background: #34D399; display: inline-block; }
 
-  /* ---- wordmark (typographic fallback for assets/prospur-logo.png) ---- */
-  .wordmark { display: inline-flex; align-items: center; }
-  .wordmark-mark { display: block; }
-  .wordmark-text { font-weight: 700; color: #fff; letter-spacing: -0.02em; }
-  .wordmark--band .wordmark-mark { width: 62px; height: 62px; }
-  .wordmark--band .wordmark-text { font-size: 52px; margin-left: 16px; }
-  .wordmark--seam .wordmark-mark { width: 30px; height: 30px; }
-  .wordmark--seam .wordmark-text { font-size: 26px; margin-left: 9px;
-                                    text-shadow: 0 2px 10px rgba(0,0,0,0.9); }
+  /* ---- retention progress bar ---- */
+  .progress-inner { position: absolute; top: 0; left: 0; width: 1080px; height: 6px;
+                     background: rgba(255,255,255,0.16); }
+  .progress-fill { width: 100%; height: 100%; background: #34D399;
+                    transform-origin: left center; box-shadow: 0 0 14px #34D399; }
+
+  /* ---- brand mark (real artwork drops in at public/brand/prospur-logo.png) ---- */
   .brand-img { display: block; height: auto; filter: brightness(0) invert(1); }
-  .brand-img--band { width: 268px; }
-  .brand-img--seam { width: 132px; opacity: 0.86; }
+  .brand-img--band { width: 300px; }
+  .brand-img--seam { width: 150px; opacity: 0.9;
+                      filter: brightness(0) invert(1) drop-shadow(0 2px 8px rgba(0,0,0,0.9)); }
+  .brand-fallback { display: block; }
+  .brand-fallback--band { width: 62px; height: 62px; }
+  .brand-fallback--seam { width: 34px; height: 34px;
+                           filter: drop-shadow(0 2px 8px rgba(0,0,0,0.9)); }
 </style>
 </head>
 <body>
 <div id="stage" data-composition-id="prospur-saver-vs-spender" data-start="0" data-duration="25.267"
      data-fps="30" data-width="1080" data-height="1920">
   <video id="input-video" class="clip" data-track-index="0" data-start="0" data-duration="25.267" data-has-audio="true" data-volume="1" src="input-video.mp4" playsinline></video>
-  <div id="progress" class="clip " data-track-index="1" data-start="0.0" data-duration="25.267">
-    <div class="progress-inner"><div class="progress-fill"></div></div>
+  <div id="tint-top" class="clip " data-track-index="1" data-start="0.0" data-duration="25.267">
+    <div class="tint-inner tint-inner--top"></div>
   </div>
-  <div id="hook-scrim" class="clip " data-track-index="2" data-start="0.0" data-duration="3.2">
-    <div class="hook-scrim-inner"></div>
+  <div id="tint-bot" class="clip " data-track-index="2" data-start="0.0" data-duration="25.267">
+    <div class="tint-inner tint-inner--bot"></div>
   </div>
-  <div id="hook" class="clip " data-track-index="3" data-start="0.0" data-duration="3.2">
-    <div class="hook-inner"><div class="hook-line hook-line--0"><span class="hw">Same</span> <span class="hw">salary.</span> </div><div class="hook-line hook-line--1"><span class="hw">Same</span> <span class="hw">coffee.</span> </div><div class="hook-line hook-line--2"><span class="hw">Different</span> <span class="hw">month-end.</span> </div></div>
+  <div id="vignette" class="clip " data-track-index="3" data-start="0.0" data-duration="25.267">
+    <div class="vignette-inner"></div>
   </div>
-  <div id="divider" class="clip " data-track-index="4" data-start="2.933" data-duration="22.334">
+  <div id="grain" class="clip " data-track-index="4" data-start="0.0" data-duration="25.267">
+    <div class="grain-inner"></div>
+  </div>
+  <div id="flash-0" class="clip " data-track-index="5" data-start="6.4" data-duration="0.3">
+    <div class="flash-inner"></div>
+  </div>
+  <div id="flash-1" class="clip " data-track-index="5" data-start="10.467" data-duration="0.3">
+    <div class="flash-inner"></div>
+  </div>
+  <div id="flash-2" class="clip " data-track-index="5" data-start="15.633" data-duration="0.3">
+    <div class="flash-inner"></div>
+  </div>
+  <div id="flash-3" class="clip " data-track-index="5" data-start="20.4" data-duration="0.3">
+    <div class="flash-inner"></div>
+  </div>
+  <div id="divider" class="clip " data-track-index="6" data-start="2.933" data-duration="22.334">
     <div class="divider-inner"></div>
   </div>
-  <div id="chip-t-0" class="clip " data-track-index="5" data-start="3.3" data-duration="3.133">
+  <div id="chip-t-0" class="clip " data-track-index="7" data-start="3.3" data-duration="3.133">
     <div class="chip-inner chip-inner--top"><span class="chip-rule chip-rule--save"></span><span class="chip-body"><span class="chip-name">ANSHUMAN</span><span class="chip-label chip-label--save">PLANS FIRST</span></span></div>
   </div>
-  <div id="chip-b-0" class="clip " data-track-index="6" data-start="3.3" data-duration="3.133">
+  <div id="chip-b-0" class="clip " data-track-index="8" data-start="3.3" data-duration="3.133">
     <div class="chip-inner chip-inner--bot"><span class="chip-rule chip-rule--spend"></span><span class="chip-body"><span class="chip-name">VEDANT</span><span class="chip-label chip-label--spend">SPENDS FIRST</span></span></div>
   </div>
-  <div id="chip-t-1" class="clip " data-track-index="5" data-start="6.433" data-duration="4.067">
+  <div id="chip-t-1" class="clip " data-track-index="7" data-start="6.433" data-duration="4.067">
     <div class="chip-inner chip-inner--top"><span class="chip-rule chip-rule--save"></span><span class="chip-body"><span class="chip-name">ANSHUMAN</span><span class="chip-label chip-label--save">ONE PARCEL</span></span></div>
   </div>
-  <div id="chip-b-1" class="clip " data-track-index="6" data-start="6.433" data-duration="4.067">
+  <div id="chip-b-1" class="clip " data-track-index="8" data-start="6.433" data-duration="4.067">
     <div class="chip-inner chip-inner--bot"><span class="chip-rule chip-rule--spend"></span><span class="chip-body"><span class="chip-name">VEDANT</span><span class="chip-label chip-label--spend">PARCEL PILE</span></span></div>
   </div>
-  <div id="chip-t-2" class="clip " data-track-index="5" data-start="10.5" data-duration="5.167">
+  <div id="chip-t-2" class="clip " data-track-index="7" data-start="10.5" data-duration="5.167">
     <div class="chip-inner chip-inner--top"><span class="chip-rule chip-rule--save"></span><span class="chip-body"><span class="chip-name">ANSHUMAN</span><span class="chip-label chip-label--save">ONE ITEM</span></span></div>
   </div>
-  <div id="chip-b-2" class="clip " data-track-index="6" data-start="10.5" data-duration="5.167">
+  <div id="chip-b-2" class="clip " data-track-index="8" data-start="10.5" data-duration="5.167">
     <div class="chip-inner chip-inner--bot"><span class="chip-rule chip-rule--spend"></span><span class="chip-body"><span class="chip-name">VEDANT</span><span class="chip-label chip-label--spend">FOUR ITEMS</span></span></div>
   </div>
-  <div id="chip-t-3" class="clip " data-track-index="5" data-start="15.667" data-duration="4.766">
+  <div id="chip-t-3" class="clip " data-track-index="7" data-start="15.667" data-duration="4.766">
     <div class="chip-inner chip-inner--top"><span class="chip-rule chip-rule--save"></span><span class="chip-body"><span class="chip-name">ANSHUMAN</span><span class="chip-label chip-label--save">SLEPT ON IT</span></span></div>
   </div>
-  <div id="chip-b-3" class="clip " data-track-index="6" data-start="15.667" data-duration="4.766">
+  <div id="chip-b-3" class="clip " data-track-index="8" data-start="15.667" data-duration="4.766">
     <div class="chip-inner chip-inner--bot"><span class="chip-rule chip-rule--spend"></span><span class="chip-body"><span class="chip-name">VEDANT</span><span class="chip-label chip-label--spend">BOUGHT IT NOW</span></span></div>
   </div>
-  <div id="chip-t-4" class="clip " data-track-index="5" data-start="20.433" data-duration="2.367">
+  <div id="chip-t-4" class="clip " data-track-index="7" data-start="20.433" data-duration="2.367">
     <div class="chip-inner chip-inner--top"><span class="chip-rule chip-rule--save"></span><span class="chip-body"><span class="chip-name">ANSHUMAN</span><span class="chip-label chip-label--save">SAVES FIRST</span></span></div>
   </div>
-  <div id="chip-b-4" class="clip " data-track-index="6" data-start="20.433" data-duration="2.367">
+  <div id="chip-b-4" class="clip " data-track-index="8" data-start="20.433" data-duration="2.367">
     <div class="chip-inner chip-inner--bot"><span class="chip-rule chip-rule--spend"></span><span class="chip-body"><span class="chip-name">VEDANT</span><span class="chip-label chip-label--spend">SAVES LAST</span></span></div>
   </div>
-  <div id="cap-0" class="clip " data-track-index="7" data-start="3.467" data-duration="2.833">
+  <div id="cap-0" class="clip " data-track-index="9" data-start="3.467" data-duration="2.833">
     <div class="cap-inner"><div class="cap-line"><span class="cw">Same</span> <span class="cw">coffee</span> <span class="cw">run.</span> </div><div class="cap-line cap-line--2"><span class="cw">Only</span> <span class="cw">one</span> <span class="cw">planned</span> <span class="cw">for</span> <span class="cw">it.</span> </div></div>
   </div>
-  <div id="cap-1" class="clip " data-track-index="7" data-start="6.6" data-duration="3.733">
+  <div id="cap-1" class="clip " data-track-index="9" data-start="6.6" data-duration="3.733">
     <div class="cap-inner"><div class="cap-line"><span class="cw">Sale</span> <span class="cw">week.</span> </div><div class="cap-line cap-line--2"><span class="cw">Different</span> <span class="cw">carts.</span> </div></div>
   </div>
-  <div id="cap-2" class="clip " data-track-index="7" data-start="10.7" data-duration="4.8">
+  <div id="cap-2" class="clip " data-track-index="9" data-start="10.7" data-duration="4.8">
     <div class="cap-inner"><div class="cap-line"><span class="cw">The</span> <span class="cw">small</span> <span class="cw">stuff</span> </div><div class="cap-line cap-line--2"><span class="cw">is</span> <span class="cw">never</span> <span class="cw">the</span> <span class="cw">small</span> <span class="cw">stuff.</span> </div></div>
   </div>
-  <div id="cap-3" class="clip " data-track-index="7" data-start="15.867" data-duration="4.433">
+  <div id="cap-3" class="clip " data-track-index="9" data-start="15.867" data-duration="4.433">
     <div class="cap-inner"><div class="cap-line"><span class="cw">One</span> <span class="cw">added</span> <span class="cw">it</span> <span class="cw">to</span> <span class="cw">cart.</span> </div><div class="cap-line cap-line--2"><span class="cw">One</span> <span class="cw">added</span> <span class="cw">it</span> <span class="cw">to</span> <span class="cw">the</span> <span class="cw">bill.</span> </div></div>
   </div>
-  <div id="ring-0" class="clip " data-track-index="8" data-start="20.9" data-duration="1.9">
+  <div id="ring-0" class="clip " data-track-index="11" data-start="20.9" data-duration="1.9">
     <div class="ring-inner"><svg class="ring-svg" viewBox="0 0 1080 1920" aria-hidden="true"><ellipse cx="890" cy="595" rx="178" ry="172" fill="none" stroke="#34D399" stroke-width="7" stroke-linecap="round" transform="rotate(-9 890 595)"/><path d="M920 415 L898 422" stroke="#34D399" stroke-width="5" stroke-linecap="round" fill="none"/></svg><span class="ring-label" style="top:348px; color:#34D399;">FILLING UP</span></div>
   </div>
-  <div id="ring-1" class="clip " data-track-index="9" data-start="21.267" data-duration="1.533">
+  <div id="ring-1" class="clip " data-track-index="12" data-start="21.267" data-duration="1.533">
     <div class="ring-inner"><svg class="ring-svg" viewBox="0 0 1080 1920" aria-hidden="true"><ellipse cx="900" cy="1372" rx="178" ry="166" fill="none" stroke="#F59E0B" stroke-width="7" stroke-linecap="round" transform="rotate(-9 900 1372)"/><path d="M930 1198 L908 1198" stroke="#F59E0B" stroke-width="5" stroke-linecap="round" fill="none"/></svg><span class="ring-label" style="top:1124px; color:#F59E0B;">STILL EMPTY</span></div>
   </div>
-  <div id="cta-scrim" class="clip " data-track-index="11" data-start="22.8" data-duration="2.467">
+  <div id="hook-scrim" class="clip " data-track-index="13" data-start="0.0" data-duration="3.2">
+    <div class="hook-scrim-inner"></div>
+  </div>
+  <div id="letterbox" class="clip " data-track-index="14" data-start="0.0" data-duration="3.2">
+    <div class="lb-inner"><div class="lb lb--t"></div><div class="lb lb--b"></div></div>
+  </div>
+  <div id="hook" class="clip " data-track-index="15" data-start="0.0" data-duration="3.2">
+    <div class="hook-inner"><div class="hook-line hook-line--0"><span class="hw">Same</span> <span class="hw">salary.</span> </div><div class="hook-line hook-line--1"><span class="hw">Same</span> <span class="hw">coffee.</span> </div><div class="hook-line hook-line--2"><span class="hw">Different</span> <span class="hw">month-end.</span> </div></div>
+  </div>
+  <div id="cta-scrim" class="clip " data-track-index="16" data-start="22.8" data-duration="2.467">
     <div class="cta-scrim-inner"></div>
   </div>
-  <div id="cta" class="clip " data-track-index="12" data-start="22.8" data-duration="2.467">
+  <div id="cta" class="clip " data-track-index="17" data-start="22.8" data-duration="2.467">
     <div class="cta-inner"><div class="cta-line"><span class="kw">Which</span> <span class="kw">jar</span> <span class="kw">looks</span> </div><div class="cta-line"><span class="kw">like</span> <span class="kw">yours?</span> </div><div class="cta-sub">Want to understand where yours goes?</div><div class="cta-chip">DM us  ·  Start your SIP</div></div>
   </div>
-  <div id="plate" class="clip " data-track-index="13" data-start="0.0" data-duration="25.267">
-    <div class="plate-inner"><div class="plate-rule"></div><div class="compliance"><div class="compliance-line">Prospur · AMFI-registered Mutual Fund Distributor · ARN-348873</div><div class="compliance-line">Mutual funds are subject to market risks. Read all scheme-related documents carefully.</div><div class="compliance-line">For information only, not investment advice.</div></div><div class="band"><div class="band-left"><span class="wordmark wordmark--band"><svg class="wordmark-mark" viewBox="0 0 40 40" aria-hidden="true"><rect x="1.5" y="1.5" width="37" height="37" rx="11" fill="#047857"/><path d="M11 26.5 L18 19 L23 24 L30.5 14.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="30.5" cy="14.5" r="2.9" fill="#34D399"/></svg><span class="wordmark-text">Prospur</span></span></div><div class="band-right"><span class="band-dot"></span>prospur.in</div></div></div>
+  <div id="plate" class="clip " data-track-index="18" data-start="0.0" data-duration="25.267">
+    <div class="plate-inner"><div class="plate-rule"></div><div class="compliance"><div class="compliance-line">Prospur · AMFI-registered Mutual Fund Distributor · ARN-348873</div><div class="compliance-line">Mutual funds are subject to market risks. Read all scheme-related documents carefully.</div><div class="compliance-line">For information only, not investment advice.</div></div><div class="band"><div class="band-left"><svg class="brand-fallback brand-fallback--band" viewBox="0 0 40 40" aria-hidden="true"><rect x="1.5" y="1.5" width="37" height="37" rx="11" fill="#047857"/><path d="M11 26.5 L18 19 L23 24 L30.5 14.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="30.5" cy="14.5" r="2.9" fill="#34D399"/></svg></div><div class="band-right"><span class="band-dot"></span>prospur.in</div></div></div>
   </div>
-  <div id="seam-mark" class="clip " data-track-index="14" data-start="2.933" data-duration="22.334">
-    <div class="seam-mark-inner"><span class="wordmark wordmark--seam"><svg class="wordmark-mark" viewBox="0 0 40 40" aria-hidden="true"><rect x="1.5" y="1.5" width="37" height="37" rx="11" fill="#047857"/><path d="M11 26.5 L18 19 L23 24 L30.5 14.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="30.5" cy="14.5" r="2.9" fill="#34D399"/></svg><span class="wordmark-text">Prospur</span></span></div>
+  <div id="seam-mark" class="clip " data-track-index="19" data-start="2.933" data-duration="22.334">
+    <div class="seam-mark-inner"><svg class="brand-fallback brand-fallback--seam" viewBox="0 0 40 40" aria-hidden="true"><rect x="1.5" y="1.5" width="37" height="37" rx="11" fill="#047857"/><path d="M11 26.5 L18 19 L23 24 L30.5 14.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="30.5" cy="14.5" r="2.9" fill="#34D399"/></svg></div>
+  </div>
+  <div id="progress" class="clip " data-track-index="20" data-start="0.0" data-duration="25.267">
+    <div class="progress-inner"><div class="progress-fill"></div></div>
   </div>
 </div>
 <script src="vendor/gsap.min.js"></script>
 <script>
 (function () {
   var tl = gsap.timeline({ paused: true });
-  tl.set('.progress-inner', { opacity: 1, y: 0 }, 0);
-  tl.fromTo('.progress-fill', { scaleX: 0 }, { scaleX: 1, duration: 25.267, ease: 'none' }, 0);
-  tl.set('.hook-scrim-inner', { opacity: 1, y: 0 }, 0);
-  tl.to('.hook-scrim-inner', { opacity: 0, duration: 0.32, ease: 'power2.in' }, 2.867);
-  tl.set('.hook-scrim-inner', { opacity: 0, visibility: 'hidden' }, 3.2);
-  tl.set('.hook-inner', { opacity: 1, y: 0 }, 0);
-  tl.fromTo('.hook-line--0 .hw', { opacity: 0, y: 26, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.34, ease: 'back.out(1.7)', stagger: 0.07 }, 0.1);
-  tl.fromTo('.hook-line--1 .hw', { opacity: 0, y: 26, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.34, ease: 'back.out(1.7)', stagger: 0.07 }, 0.733);
-  tl.fromTo('.hook-line--2 .hw', { opacity: 0, y: 26, scale: 0.92 }, { opacity: 1, y: 0, scale: 1, duration: 0.34, ease: 'back.out(1.7)', stagger: 0.07 }, 1.333);
-  tl.to('.hook-inner', { opacity: 0, duration: 0.28, ease: 'power2.in' }, 2.933);
-  tl.set('.hook-inner', { opacity: 0, visibility: 'hidden' }, 3.2);
+  tl.set('#flash-0 .flash-inner', { opacity: 0 }, 6.4);
+  tl.to('#flash-0 .flash-inner', { opacity: 0.30, duration: 0.05, ease: 'power2.out' }, 6.433);
+  tl.to('#flash-0 .flash-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 6.467);
+  tl.set('#flash-0 .flash-inner', { opacity: 0, visibility: 'hidden' }, 6.7);
+  tl.set('#flash-1 .flash-inner', { opacity: 0 }, 10.467);
+  tl.to('#flash-1 .flash-inner', { opacity: 0.30, duration: 0.05, ease: 'power2.out' }, 10.5);
+  tl.to('#flash-1 .flash-inner', { opacity: 0, duration: 0.234, ease: 'power2.in' }, 10.533);
+  tl.set('#flash-1 .flash-inner', { opacity: 0, visibility: 'hidden' }, 10.767);
+  tl.set('#flash-2 .flash-inner', { opacity: 0 }, 15.633);
+  tl.to('#flash-2 .flash-inner', { opacity: 0.30, duration: 0.05, ease: 'power2.out' }, 15.667);
+  tl.to('#flash-2 .flash-inner', { opacity: 0, duration: 0.2, ease: 'power2.in' }, 15.733);
+  tl.set('#flash-2 .flash-inner', { opacity: 0, visibility: 'hidden' }, 15.933);
+  tl.set('#flash-3 .flash-inner', { opacity: 0 }, 20.4);
+  tl.to('#flash-3 .flash-inner', { opacity: 0.30, duration: 0.05, ease: 'power2.out' }, 20.433);
+  tl.to('#flash-3 .flash-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 20.467);
+  tl.set('#flash-3 .flash-inner', { opacity: 0, visibility: 'hidden' }, 20.7);
   tl.fromTo('.divider-inner', { opacity: 0, scaleX: 0 }, { opacity: 1, scaleX: 1, duration: 0.5, ease: 'power3.out' }, 2.933);
-  tl.fromTo('#chip-t-0 .chip-inner', { opacity: 0, y: 0 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 3.3);
-  tl.to('#chip-t-0 .chip-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 6.2);
+  tl.to('.divider-inner', { scaleY: 2.8, duration: 0.09, ease: 'power2.out' }, 6.433);
+  tl.to('.divider-inner', { scaleY: 1, duration: 0.26, ease: 'power2.in' }, 6.533);
+  tl.to('.divider-inner', { scaleY: 2.8, duration: 0.09, ease: 'power2.out' }, 10.5);
+  tl.to('.divider-inner', { scaleY: 1, duration: 0.26, ease: 'power2.in' }, 10.6);
+  tl.to('.divider-inner', { scaleY: 2.8, duration: 0.09, ease: 'power2.out' }, 15.667);
+  tl.to('.divider-inner', { scaleY: 1, duration: 0.26, ease: 'power2.in' }, 15.767);
+  tl.to('.divider-inner', { scaleY: 2.8, duration: 0.09, ease: 'power2.out' }, 20.433);
+  tl.to('.divider-inner', { scaleY: 1, duration: 0.26, ease: 'power2.in' }, 20.533);
+  tl.fromTo('#chip-t-0 .chip-inner', { opacity: 0, x: -46 }, { opacity: 1, x: 0, duration: 0.42, ease: 'back.out(1.5)' }, 3.3);
+  tl.to('#chip-t-0 .chip-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 6.2);
   tl.set('#chip-t-0 .chip-inner', { opacity: 0, visibility: 'hidden' }, 6.433);
-  tl.fromTo('#chip-b-0 .chip-inner', { opacity: 0, y: 0 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 3.3);
-  tl.to('#chip-b-0 .chip-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 6.2);
+  tl.fromTo('#chip-t-0 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.32, ease: 'back.out(2)' }, 3.4);
+  tl.fromTo('#chip-b-0 .chip-inner', { opacity: 0, x: -46 }, { opacity: 1, x: 0, duration: 0.42, ease: 'back.out(1.5)' }, 3.3);
+  tl.to('#chip-b-0 .chip-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 6.2);
   tl.set('#chip-b-0 .chip-inner', { opacity: 0, visibility: 'hidden' }, 6.433);
-  tl.fromTo('#chip-t-0 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 3.367);
-  tl.fromTo('#chip-b-0 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 3.367);
-  tl.fromTo('#chip-t-1 .chip-inner', { opacity: 0, y: 0 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 6.433);
-  tl.to('#chip-t-1 .chip-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 10.267);
+  tl.fromTo('#chip-b-0 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.32, ease: 'back.out(2)' }, 3.4);
+  tl.fromTo('#chip-t-1 .chip-inner', { opacity: 0, x: -46 }, { opacity: 1, x: 0, duration: 0.42, ease: 'back.out(1.5)' }, 6.433);
+  tl.to('#chip-t-1 .chip-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 10.267);
   tl.set('#chip-t-1 .chip-inner', { opacity: 0, visibility: 'hidden' }, 10.5);
-  tl.fromTo('#chip-b-1 .chip-inner', { opacity: 0, y: 0 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 6.433);
-  tl.to('#chip-b-1 .chip-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 10.267);
+  tl.fromTo('#chip-t-1 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.32, ease: 'back.out(2)' }, 6.533);
+  tl.fromTo('#chip-b-1 .chip-inner', { opacity: 0, x: -46 }, { opacity: 1, x: 0, duration: 0.42, ease: 'back.out(1.5)' }, 6.433);
+  tl.to('#chip-b-1 .chip-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 10.267);
   tl.set('#chip-b-1 .chip-inner', { opacity: 0, visibility: 'hidden' }, 10.5);
-  tl.fromTo('#chip-t-1 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 6.5);
-  tl.fromTo('#chip-b-1 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 6.5);
-  tl.fromTo('#chip-t-2 .chip-inner', { opacity: 0, y: 0 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 10.5);
-  tl.to('#chip-t-2 .chip-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 15.433);
+  tl.fromTo('#chip-b-1 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.32, ease: 'back.out(2)' }, 6.533);
+  tl.fromTo('#chip-t-2 .chip-inner', { opacity: 0, x: -46 }, { opacity: 1, x: 0, duration: 0.42, ease: 'back.out(1.5)' }, 10.5);
+  tl.to('#chip-t-2 .chip-inner', { opacity: 0, duration: 0.234, ease: 'power2.in' }, 15.433);
   tl.set('#chip-t-2 .chip-inner', { opacity: 0, visibility: 'hidden' }, 15.667);
-  tl.fromTo('#chip-b-2 .chip-inner', { opacity: 0, y: 0 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 10.5);
-  tl.to('#chip-b-2 .chip-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 15.433);
+  tl.fromTo('#chip-t-2 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.32, ease: 'back.out(2)' }, 10.6);
+  tl.fromTo('#chip-b-2 .chip-inner', { opacity: 0, x: -46 }, { opacity: 1, x: 0, duration: 0.42, ease: 'back.out(1.5)' }, 10.5);
+  tl.to('#chip-b-2 .chip-inner', { opacity: 0, duration: 0.234, ease: 'power2.in' }, 15.433);
   tl.set('#chip-b-2 .chip-inner', { opacity: 0, visibility: 'hidden' }, 15.667);
-  tl.fromTo('#chip-t-2 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 10.567);
-  tl.fromTo('#chip-b-2 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 10.567);
-  tl.fromTo('#chip-t-3 .chip-inner', { opacity: 0, y: 0 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 15.667);
-  tl.to('#chip-t-3 .chip-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 20.2);
+  tl.fromTo('#chip-b-2 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.32, ease: 'back.out(2)' }, 10.6);
+  tl.fromTo('#chip-t-3 .chip-inner', { opacity: 0, x: -46 }, { opacity: 1, x: 0, duration: 0.42, ease: 'back.out(1.5)' }, 15.667);
+  tl.to('#chip-t-3 .chip-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 20.2);
   tl.set('#chip-t-3 .chip-inner', { opacity: 0, visibility: 'hidden' }, 20.433);
-  tl.fromTo('#chip-b-3 .chip-inner', { opacity: 0, y: 0 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 15.667);
-  tl.to('#chip-b-3 .chip-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 20.2);
+  tl.fromTo('#chip-t-3 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.32, ease: 'back.out(2)' }, 15.767);
+  tl.fromTo('#chip-b-3 .chip-inner', { opacity: 0, x: -46 }, { opacity: 1, x: 0, duration: 0.42, ease: 'back.out(1.5)' }, 15.667);
+  tl.to('#chip-b-3 .chip-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 20.2);
   tl.set('#chip-b-3 .chip-inner', { opacity: 0, visibility: 'hidden' }, 20.433);
-  tl.fromTo('#chip-t-3 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 15.733);
-  tl.fromTo('#chip-b-3 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 15.733);
-  tl.fromTo('#chip-t-4 .chip-inner', { opacity: 0, y: 0 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 20.433);
-  tl.to('#chip-t-4 .chip-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 22.567);
+  tl.fromTo('#chip-b-3 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.32, ease: 'back.out(2)' }, 15.767);
+  tl.fromTo('#chip-t-4 .chip-inner', { opacity: 0, x: -46 }, { opacity: 1, x: 0, duration: 0.42, ease: 'back.out(1.5)' }, 20.433);
+  tl.to('#chip-t-4 .chip-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 22.567);
   tl.set('#chip-t-4 .chip-inner', { opacity: 0, visibility: 'hidden' }, 22.8);
-  tl.fromTo('#chip-b-4 .chip-inner', { opacity: 0, y: 0 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 20.433);
-  tl.to('#chip-b-4 .chip-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 22.567);
+  tl.fromTo('#chip-t-4 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.32, ease: 'back.out(2)' }, 20.533);
+  tl.fromTo('#chip-b-4 .chip-inner', { opacity: 0, x: -46 }, { opacity: 1, x: 0, duration: 0.42, ease: 'back.out(1.5)' }, 20.433);
+  tl.to('#chip-b-4 .chip-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 22.567);
   tl.set('#chip-b-4 .chip-inner', { opacity: 0, visibility: 'hidden' }, 22.8);
-  tl.fromTo('#chip-t-4 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 20.5);
-  tl.fromTo('#chip-b-4 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: 'power2.out' }, 20.5);
-  tl.fromTo('#cap-0 .cap-inner', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 3.467);
-  tl.to('#cap-0 .cap-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 6.067);
+  tl.fromTo('#chip-b-4 .chip-rule', { scaleY: 0 }, { scaleY: 1, duration: 0.32, ease: 'back.out(2)' }, 20.533);
+  tl.fromTo('#cap-0 .cap-inner', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 3.467);
+  tl.fromTo('#cap-0 .cw', { opacity: 0, y: 18, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: 'back.out(1.7)', stagger: 0.05 }, 3.5);
+  tl.to('#cap-0 .cap-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 6.067);
   tl.set('#cap-0 .cap-inner', { opacity: 0, visibility: 'hidden' }, 6.3);
-  tl.fromTo('#cap-0 .cw', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out', stagger: 0.045 }, 3.5);
-  tl.fromTo('#cap-1 .cap-inner', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 6.6);
-  tl.to('#cap-1 .cap-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 10.133);
+  tl.fromTo('#cap-1 .cap-inner', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 6.6);
+  tl.fromTo('#cap-1 .cw', { opacity: 0, y: 18, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: 'back.out(1.7)', stagger: 0.05 }, 6.667);
+  tl.to('#cap-1 .cap-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 10.1);
   tl.set('#cap-1 .cap-inner', { opacity: 0, visibility: 'hidden' }, 10.333);
-  tl.fromTo('#cap-1 .cw', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out', stagger: 0.045 }, 6.667);
-  tl.fromTo('#cap-2 .cap-inner', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 10.7);
-  tl.to('#cap-2 .cap-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 15.267);
+  tl.fromTo('#cap-2 .cap-inner', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 10.7);
+  tl.fromTo('#cap-2 .cw', { opacity: 0, y: 18, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: 'back.out(1.7)', stagger: 0.05 }, 10.767);
+  tl.to('#cap-2 .cap-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 15.267);
   tl.set('#cap-2 .cap-inner', { opacity: 0, visibility: 'hidden' }, 15.5);
-  tl.fromTo('#cap-2 .cw', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out', stagger: 0.045 }, 10.767);
-  tl.fromTo('#cap-3 .cap-inner', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 15.867);
-  tl.to('#cap-3 .cap-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 20.067);
+  tl.fromTo('#cap-3 .cap-inner', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out' }, 15.867);
+  tl.fromTo('#cap-3 .cw', { opacity: 0, y: 18, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: 'back.out(1.7)', stagger: 0.05 }, 15.9);
+  tl.to('#cap-3 .cap-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 20.067);
   tl.set('#cap-3 .cap-inner', { opacity: 0, visibility: 'hidden' }, 20.3);
-  tl.fromTo('#cap-3 .cw', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.26, ease: 'power2.out', stagger: 0.045 }, 15.9);
-  tl.fromTo('#ring-0 .ring-inner', { opacity: 0, scale: 1.22 }, { opacity: 1, scale: 1, duration: 0.42, ease: 'back.out(1.5)' }, 20.9);
-  tl.to('#ring-0 .ring-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 22.567);
+  tl.fromTo('#ring-0 .ring-inner', { opacity: 0, scale: 1.24, rotation: -3 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.46, ease: 'back.out(1.6)' }, 20.9);
+  tl.to('#ring-0 .ring-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 22.567);
   tl.set('#ring-0 .ring-inner', { opacity: 0, visibility: 'hidden' }, 22.8);
-  tl.fromTo('#ring-1 .ring-inner', { opacity: 0, scale: 1.22 }, { opacity: 1, scale: 1, duration: 0.42, ease: 'back.out(1.5)' }, 21.267);
-  tl.to('#ring-1 .ring-inner', { opacity: 0, duration: 0.22, ease: 'power2.in' }, 22.567);
+  tl.fromTo('#ring-1 .ring-inner', { opacity: 0, scale: 1.24, rotation: -3 }, { opacity: 1, scale: 1, rotation: 0, duration: 0.46, ease: 'back.out(1.6)' }, 21.267);
+  tl.to('#ring-1 .ring-inner', { opacity: 0, duration: 0.233, ease: 'power2.in' }, 22.567);
   tl.set('#ring-1 .ring-inner', { opacity: 0, visibility: 'hidden' }, 22.8);
+  tl.set('.hook-scrim-inner', { opacity: 1, y: 0 }, 0.0);
+  tl.to('.hook-scrim-inner', { opacity: 0, duration: 0.333, ease: 'power2.in' }, 2.867);
+  tl.set('.hook-scrim-inner', { opacity: 0, visibility: 'hidden' }, 3.2);
+  tl.set('.lb-inner', { opacity: 1, y: 0 }, 0);
+  tl.fromTo('.lb--t', { y: -128 }, { y: 0, duration: 0.5, ease: 'power3.out' }, 0);
+  tl.fromTo('.lb--b', { y: 128 }, { y: 0, duration: 0.5, ease: 'power3.out' }, 0);
+  tl.to('.lb--t', { y: -128, duration: 0.34, ease: 'power2.in' }, 2.867);
+  tl.to('.lb--b', { y: 128, duration: 0.34, ease: 'power2.in' }, 2.867);
+  tl.set('.lb-inner', { opacity: 0, visibility: 'hidden' }, 3.2);
+  tl.set('.hook-inner', { opacity: 1, y: 0 }, 0.0);
+  tl.fromTo('.hook-line--0 .hw', { opacity: 0, y: 30, scale: 0.88 }, { opacity: 1, y: 0, scale: 1, duration: 0.38, ease: 'back.out(2)', stagger: 0.065 }, 0.1);
+  tl.fromTo('.hook-line--1 .hw', { opacity: 0, y: 30, scale: 0.88 }, { opacity: 1, y: 0, scale: 1, duration: 0.38, ease: 'back.out(2)', stagger: 0.065 }, 0.733);
+  tl.fromTo('.hook-line--2 .hw', { opacity: 0, y: 30, scale: 0.88 }, { opacity: 1, y: 0, scale: 1, duration: 0.38, ease: 'back.out(2)', stagger: 0.065 }, 1.333);
+  tl.to('.hook-inner', { opacity: 0, duration: 0.267, ease: 'power2.in' }, 2.933);
+  tl.set('.hook-inner', { opacity: 0, visibility: 'hidden' }, 3.2);
   tl.fromTo('.cta-scrim-inner', { opacity: 0 }, { opacity: 1, duration: 0.34, ease: 'power2.out' }, 22.8);
   tl.set('.cta-inner', { opacity: 1, y: 0 }, 22.8);
-  tl.fromTo('.cta-line .kw', { opacity: 0, y: 24, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.32, ease: 'back.out(1.6)', stagger: 0.055 }, 22.933);
+  tl.fromTo('.cta-line .kw', { opacity: 0, y: 28, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.36, ease: 'back.out(1.9)', stagger: 0.055 }, 22.933);
   tl.fromTo('.cta-sub', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 23.433);
-  tl.fromTo('.cta-chip', { opacity: 0, y: 16, scale: 0.94 }, { opacity: 1, y: 0, scale: 1, duration: 0.36, ease: 'back.out(1.8)' }, 23.633);
-  tl.set('.plate-inner', { opacity: 1, y: 0 }, 0);
+  tl.fromTo('.cta-chip', { opacity: 0, y: 18, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'back.out(2.2)' }, 23.633);
+  tl.to('.cta-chip', { scale: 1.05, duration: 0.55, ease: 'sine.inOut' }, 24.167);
+  tl.to('.cta-chip', { scale: 1.0, duration: 0.55, ease: 'sine.inOut' }, 24.7);
   tl.fromTo('.seam-mark-inner', { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power2.out' }, 3.167);
+  tl.fromTo('.progress-fill', { scaleX: 0 }, { scaleX: 1, duration: 25.267, ease: 'none' }, 0);
   window.__timelines = window.__timelines || {};
   window.__timelines["prospur-saver-vs-spender"] = tl;
 })();
