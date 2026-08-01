@@ -8,9 +8,12 @@ saver.mp4
 saver_loop.mp4
 spender.mp4
 
-# Finished renders in projects/ ARE committed: they are the deliverable, and
-# they cannot be rebuilt from this repo alone (the camera source lives
-# outside it). Renders produced while iterating on templates/ are not.
+# Upload-ready renders in projects/ ARE committed: they are the deliverable,
+# and they cannot be rebuilt from this repo alone (the camera source lives
+# outside it). The full-bitrate render master is not — film grain pushes it
+# past 50 MB, it re-encodes to output-ig.mp4 in seconds, and Instagram
+# re-encodes on ingest regardless.
+projects/**/output.mp4
 templates/**/output.mp4
 templates/**/cover.png
 

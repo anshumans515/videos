@@ -6,11 +6,18 @@ assumes. See `PLAYBOOK.md` §4, §8, §9.
 
 | | |
 |---|---|
-| **Output** | `output.mp4` — 1080×1920, 30 fps, 25.3 s |
-| **Cover** | `../prospur-cover/public/snapshots/frame-00-at-0s.png` |
+| **Output** | `output.mp4` — 1080×1920, 30 fps, 25.3 s (render master, ~55 MB) |
+| **For upload** | `output-ig.mp4` — same thing at CRF 23, ~22 MB |
+| **Cover** | `../prospur-cover/cover.png` |
 | **Caption** | `caption.md` |
 | **Audio** | −15.2 LUFS integrated, −1.9 dBFS true peak |
 | **Cast** | Anshuman (blue shirt) = plans first · Vedant (white shirt) = spends first |
+
+The film grain is high-frequency detail, so it costs real bitrate — the
+master lands around 55 MB for 25 seconds. `output-ig.mp4` is a straight CRF 23
+re-encode of it (audio stream copied, not re-encoded) and is what to actually
+upload; Instagram re-encodes on ingest anyway, so the extra 30 MB buys
+nothing downstream.
 
 ## Rebuild
 
@@ -99,12 +106,60 @@ that is never a face, because it is where two separate shots join:
 - The caption in `caption.md` carries the full disclaimer block, which §12
   requires independently of the on-screen strip.
 
+## The cinematic layer, and three traps in it
+
+On top of the storytelling chrome the reel runs a base layer: a per-half
+colour grade (cool green on the saver, warm amber on the spender), a
+vignette, film grain, a bloom on each scene cut with a pulse through the
+divider, and a letterbox that rides in with the hook. `CINEMA=0 python3
+assemble.py` builds without the three full-frame layers, which is the fastest
+way to bisect a rendering problem.
+
+Three things cost a render each to find. Do not reintroduce them:
+
+1. **Never call `hold()` on a static always-on layer.** It sets `opacity: 1`,
+   which silently overrides whatever alpha the CSS intends — this is how the
+   grain ended up painting at full strength over the footage instead of at
+   0.055. A `.clip` element is already visible inside its own window, so
+   those layers need no GSAP at all.
+
+2. **Grain comes from a pre-baked noise tile** (`public/brand/noise.png`,
+   192px, repeated), not an inline SVG `feTurbulence`. The filter version is
+   catastrophically slow under software rasterisation: it took this 25 s
+   render past 40 minutes with no end in sight, versus 8m45s for the tile.
+   Visually they are indistinguishable at 5% opacity.
+
+3. **`mix-blend-mode` over the `<video>` is not safe here.** Chromium
+   promotes the video to its own compositing layer and a blended element
+   above it composites *without* that layer in its backdrop. Plain alpha only.
+
+### The snapshot previewer lies about early frames
+
+`hyperframes snapshot` renders the video block as flat white for any
+timestamp before ~20.4 s in this environment, and `hyperframes validate`
+inherits the same blank backdrop — which is why its contrast warnings read
+1.7:1 for white caption text. **The rendered MP4 is correct at every
+timestamp**; this was verified by decoding real frames out of `output.mp4`
+with ffmpeg. Bisecting confirmed it is not the tints, vignette or grain
+(removing all three changes nothing) and not GOP density (the base video has
+clean 1-second keyframes throughout).
+
+So: use snapshots to check layout and composition, but verify anything about
+the footage itself against decoded frames of the render —
+
+```bash
+ffmpeg -ss 13 -i output.mp4 -frames:v 1 -y /tmp/check.jpg
+```
+
 ## Known gaps
 
-- **`public/brand/prospur-logo.png` is missing.** The real wordmark could not
-  be fetched in this environment, so `assemble.py` falls back to a
-  typographic lockup. Drop the real 880×168 PNG at that path and re-run
-  `assemble.py` — it swaps automatically, no code change.
+- **`public/brand/prospur-logo.png` is missing.** The artwork was supplied as
+  an inline chat image rather than a file, and prospur.in is blocked by this
+  environment's proxy, so `assemble.py` falls back to a plain green mark.
+  Drop the real PNG at that path and re-run `assemble.py` — it swaps
+  automatically, no code change. Prefer a transparent, white/knockout
+  version: it sits on the dark brand band and on the seam over footage. No
+  "Prospur" text is set beside it, since the logo is itself a wordmark.
 - **No music bed.** The reel ships with repaired room tone. Drop a licensed
   `music_bed.m4a` beside `build_base.sh` and re-run it to swap. For reach,
   adding trending audio in-app is usually the stronger play — there is no
