@@ -19,6 +19,9 @@ templates/
   02-faceless-explainer/    Archetype 2 — no footage, pure text/motion
   03-split-broll/           Archetype 3 — silent split-screen B-roll
   04-cover/                 Archetype 4 — still Reels cover / thumbnail
+projects/                   built reels (one folder per deliverable)
+  prospur-saver-vs-spender/ SAVER vs SPENDER reel — Archetype 3
+  prospur-cover/            its Reels cover — Archetype 4
 .claude/skills/             project skills matching each archetype
   talking-head-recut/
   faceless-explainer/

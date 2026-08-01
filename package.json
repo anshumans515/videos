@@ -1,0 +1,21 @@
+{
+  "name": "videos",
+  "version": "1.0.0",
+  "description": "Tooling and templates for producing Prospur's Instagram Reels in [HyperFrames](https://www.npmjs.com/package/hyperframes). Read [`PLAYBOOK.md`](./PLAYBOOK.md) in full before touching any composition — it is the single source of truth for brand tokens, compliance copy, safe-zones, audio repair, and the HyperFrames lint rules this repo is built around.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:41729/git/anshumans515/videos"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "gsap": "^3.15.0",
+    "hyperframes": "^0.7.87"
+  }
+}

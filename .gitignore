@@ -1,10 +1,21 @@
-# Rendered output / editing intermediates (regenerate locally, don't commit)
-output.mp4
-cover.png
+# Editing intermediates — regenerate with the project's build_base.sh.
+# Leading **/ matters: a pattern containing a slash is anchored to this file's
+# directory, so plain `public/...` would only match a public/ at the repo root.
+**/public/input-video.mp4
+**/public/snapshots/
 *.wav
 saver.mp4
 saver_loop.mp4
 spender.mp4
+
+# Finished renders in projects/ ARE committed: they are the deliverable, and
+# they cannot be rebuilt from this repo alone (the camera source lives
+# outside it). Renders produced while iterating on templates/ are not.
+templates/**/output.mp4
+templates/**/cover.png
+
+# Node
+package-lock.json
 
 # OS / editor cruft
 .DS_Store
