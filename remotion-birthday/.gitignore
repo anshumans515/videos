@@ -1,0 +1,9 @@
+node_modules/
+out/
+chunks/
+.remotion/
+*.log
+# The source video Remotion trims all 14 speaker slices out of. It's a copy
+# of ../projects/prospur-testimonials/public/testimonials-merged.mp4 (172MB
+# — well past what belongs in git). See README for how to regenerate it.
+public/

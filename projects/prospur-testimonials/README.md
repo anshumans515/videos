@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | **Master** | `public/testimonials-merged.mp4` — 13:14, ~173 MB (gitignored, rebuild with the script) |
-| **Shareable** | `public/testimonials-merged-web.mp4` — same cut, CRF 30, peak-corrected |
+| **Shareable** | `public/testimonials-merged-web.mp4` — same cut, CRF 30, peak-corrected (also gitignored — ~94 MB sits right at GitHub's 100 MB limit, and nobody's asked for this intermediate merge as a deliverable in its own right) |
 | **Build** | `./build_merge.sh <uploads-dir>` |
 
 ## Running order

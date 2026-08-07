@@ -1,3 +1,9 @@
 segments/
 concat.txt
+# Both merge outputs are gitignored, not just the master. The "master"
+# (testimonials-merged.mp4, 172MB) fails GitHub's 100MB hard per-file limit
+# outright; the "-web" compressed pass (~94MB) is technically under it but
+# still an oversized, unreviewed binary nobody has asked to have in git
+# history. Regenerate either with build_merge.sh — see README.
 public/testimonials-merged.mp4
+public/testimonials-merged-web.mp4
