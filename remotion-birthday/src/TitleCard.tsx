@@ -3,9 +3,7 @@ import { AbsoluteFill, spring, useCurrentFrame, useVideoConfig, interpolate } fr
 import { INK, GOLD, PINK, CREAM, CANVAS } from "./theme";
 import { Confetti } from "./Confetti";
 
-// PLACEHOLDER — swap the moment the real name is confirmed. Kept loud and
-// obviously fake on purpose so nobody renders this to a client by accident.
-export const BIRTHDAY_NAME = "🚧 NAME_TBD 🚧";
+export const BIRTHDAY_NAME = "Rhea";
 
 export const TitleCard: React.FC = () => {
   const frame = useCurrentFrame();
