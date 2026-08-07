@@ -7,3 +7,7 @@ concat.txt
 # history. Regenerate either with build_merge.sh — see README.
 public/testimonials-merged.mp4
 public/testimonials-merged-web.mp4
+
+# The labelled review cut IS committed (~25MB) — it's the artifact the
+# human compliance reviewer actually works from, and it's small enough.
+!public/testimonials-review.mp4
