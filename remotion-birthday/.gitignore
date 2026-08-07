@@ -11,6 +11,6 @@ chunks/
 # just large) stays ignored; regenerate it with render_chunks.sh if needed.
 !out/birthday-final-web.mp4
 # The source video Remotion trims all 14 speaker slices out of. It's a copy
-# of ../projects/prospur-testimonials/public/testimonials-merged.mp4 (172MB
+# of ../projects/birthday-messages/public/messages-merged.mp4 (172MB
 # — well past what belongs in git). See README for how to regenerate it.
 public/

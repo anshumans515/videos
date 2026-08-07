@@ -20,12 +20,12 @@ not the Prospur green/amber system), no compliance strip, no logo.
 ```bash
 cd remotion-birthday
 npm install                                            # pinned exact: remotion 4.0.505
-cp ../projects/prospur-testimonials/public/testimonials-merged.mp4 public/timeline.mp4
+cp ../projects/birthday-messages/public/messages-merged.mp4 public/timeline.mp4
 npm run studio
 ```
 
 The merged source isn't in git (172MB, past what belongs in a repo) — build
-it first from `../projects/prospur-testimonials/` (`./build_merge.sh`), then
+it first from `../projects/birthday-messages/` (`./build_merge.sh`), then
 copy it in as above. **Use a real copy, not a symlink** — see the note below.
 
 ## Layout

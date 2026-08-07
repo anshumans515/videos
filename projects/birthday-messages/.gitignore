@@ -1,0 +1,13 @@
+segments/
+concat.txt
+# Both merge outputs are gitignored, not just the master. The "master"
+# (messages-merged.mp4, 172MB) fails GitHub's 100MB hard per-file limit
+# outright; the "-web" compressed pass (~94MB) is technically under it but
+# still an oversized, unreviewed binary nobody has asked to have in git
+# history. Regenerate either with build_merge.sh — see README.
+public/messages-merged.mp4
+public/messages-merged-web.mp4
+
+# The labelled index cut IS committed (~25MB) — it is a useful navigable
+# indexed reference copy, small enough to keep in git.
+!public/messages-index.mp4
