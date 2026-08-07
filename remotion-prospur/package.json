@@ -1,0 +1,23 @@
+{
+  "name": "remotion-prospur",
+  "version": "1.0.0",
+  "description": "Remotion scaffold for Prospur reels — pinned to match the toolchain version.",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render",
+    "compositions": "remotion compositions",
+    "upgrade": "remotion upgrade",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.505",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "remotion": "4.0.505"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18",
+    "typescript": "5.7.3"
+  }
+}
